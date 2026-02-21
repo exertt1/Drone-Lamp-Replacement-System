@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DroneLight-Swap | Управление заменой ламп</title>
+    <!-- Font Awesome для иконок -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Google Fonts для современного шрифта -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0b1120 0%, #19223c 100%);
+            color: #e0e4f0;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Градиентные акценты */
+        .gradient-bg {
+            position: fixed;
+            top: -50%;
+            right: -20%;
+            width: 80%;
+            height: 80%;
+            background: radial-gradient(circle at 70% 30%, rgba(0, 180, 255, 0.15) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        .gradient-bg-2 {
+            position: fixed;
+            bottom: -30%;
+            left: -10%;
+            width: 70%;
+            height: 70%;
+            background: radial-gradient(circle at 30% 70%, rgba(150, 50, 255, 0.1) 0%, transparent 50%);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Основной контейнер */
+        .container {
+            max-width: 1440px;
+            margin: 0 auto;
+            padding: 24px 32px;
+        }
+
+        /* Шапка */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .logo-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #00c6ff, #8a2be2);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 10px 20px rgba(0, 198, 255, 0.3);
+        }
+
+        .logo-text h1 {
+            font-weight: 700;
+            font-size: 26px;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #ffffff, #b0c4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo-text span {
+            font-size: 14px;
+            font-weight: 400;
+            color: #8892b5;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .header-stats {
+            display: flex;
+            gap: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            padding: 12px 24px;
+            border-radius: 40px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            background: rgba(0, 198, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00c6ff;
+        }
+
+        .stat-info h3 {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .stat-info p {
+            font-size: 12px;
+            color: #8892b5;
+        }
+
+        .online-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(0, 255, 0, 0.05);
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 1px solid rgba(0, 255, 0, 0.2);
+        }
+
+        .online-dot {
+            width: 10px;
+            height: 10px;
+            background: #2ecc71;
+            border-radius: 50%;
+            box-shadow: 0 0 10px #2ecc71;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        /* Навигация */
+        nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 32px;
+            background: rgba(18, 25, 45, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 8px;
+            border-radius: 50px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            width: fit-content;
+        }
+
+        .nav-item {
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .nav-item i {
+            font-size: 16px;
+        }
+
+        .nav-item.active {
+            background: linear-gradient(135deg, #00c6ff, #8a2be2);
+            color: white;
+            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
+        }
+
+        .nav-item:not(.active):hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Карта и панель управления */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 0.8fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+
+        .map-card {
+            background: rgba(18, 25, 45, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #b0c4ff;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-header .badge {
+            background: rgba(0, 198, 255, 0.15);
+            padding: 6px 12px;
+            border-radius: 30px;
+            font-size: 13px;
+            color: #00c6ff;
+        }
+
+        .map-placeholder {
+            background: #0f1422;
+            border-radius: 24px;
+            height: 300px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #252f44;
+        }
+
+        /* Имитация карты с точками */
+        .map-grid {
+            display: grid;
+            grid-template-columns: repeat(20, 1fr);
+            grid-template-rows: repeat(10, 1fr);
+            height: 100%;
+            width: 100%;
+            position: relative;
+        }
+
+        .map-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin: auto;
+            transition: all 0.2s;
+        }
+
+        .dot-green {
+            background: #2ecc71;
+            box-shadow: 0 0 10px #2ecc71;
+        }
+
+        .dot-yellow {
+            background: #f39c12;
+            box-shadow: 0 0 10px #f39c12;
+        }
+
+        .dot-red {
+            background: #e74c3c;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .dot-blue {
+            background: #3498db;
+            box-shadow: 0 0 10px #3498db;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            display: flex;
+            gap: 15px;
+            font-size: 12px;
+            border: 1px solid #2a3450;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .legend-color {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        /* Панель статуса */
+        .status-panel {
+            background: rgba(18, 25, 45, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .drone-status {
+            background: linear-gradient(135deg, #1b2338, #141b2b);
+            border-radius: 24px;
+            padding: 20px;
+            border-left: 4px solid #00c6ff;
+        }
+
+        .drone-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .drone-name {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .drone-icon {
+            width: 40px;
+            height: 40px;
+            background: rgba(0, 198, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #00c6ff;
+        }
+
+        .drone-battery {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .battery-bar {
+            width: 60px;
+            height: 8px;
+            background: #2a3450;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .battery-fill {
+            height: 100%;
+            width: 85%;
+            background: linear-gradient(90deg, #2ecc71, #f1c40f);
+            border-radius: 4px;
+        }
+
+        .task-progress {
+            margin-top: 10px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: #8892b5;
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: #2a3450;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            width: 65%;
+            background: linear-gradient(90deg, #00c6ff, #8a2be2);
+            border-radius: 4px;
+        }
+
+        /* Список ламп на замену */
+        .lamp-list {
+            flex: 1;
+        }
+
+        .lamp-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .lamp-item:last-child {
+            border-bottom: none;
+        }
+
+        .lamp-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lamp-priority {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .priority-high {
+            background: #e74c3c;
+            box-shadow: 0 0 10px #e74c3c;
+        }
+
+        .priority-medium {
+            background: #f39c12;
+        }
+
+        .priority-low {
+            background: #2ecc71;
+        }
+
+        .lamp-details h4 {
+            font-size: 16px;
+            font-weight: 600;
+        }
+
+        .lamp-details p {
+            font-size: 12px;
+            color: #8892b5;
+        }
+
+        .lamp-status {
+            font-size: 13px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .status-bad {
+            color: #e74c3c;
+            background: rgba(231, 76, 60, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #00c6ff, #8a2be2);
+            border: none;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 30px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(0, 198, 255, 0.3);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid #3a4565;
+        }
+
+        .btn-outline:hover {
+            background: rgba(255, 255, 255, 0.05);
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Нижняя секция с 3D моделью */
+        .model-section {
+            background: rgba(18, 25, 45, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 32px;
+            padding: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            margin-top: 24px;
+        }
+
+        .model-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .model-viewer {
+            background: #0f1422;
+            border-radius: 24px;
+            height: 280px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #252f44;
+        }
+
+        /* Визуализация лампы (имитация 3D) */
+        .lamp-visualization {
+            display: flex;
+            gap: 40px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .lamp-base {
+            width: 120px;
+            height: 60px;
+            background: linear-gradient(135deg, #4a5a7a, #2a3450);
+            border-radius: 60px 60px 20px 20px;
+            position: relative;
+            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
+        }
+
+        .lamp-base:after {
+            content: '';
+            position: absolute;
+            top: -30px;
+            left: 40px;
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ffd700, #f39c12);
+            border-radius: 50%;
+            box-shadow: 0 0 40px #ffd700;
+            animation: glow 2s infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px #ffd700; }
+            to { box-shadow: 0 0 50px #f39c12; }
+        }
+
+        .drone-arm {
+            width: 80px;
+            height: 20px;
+            background: linear-gradient(90deg, #8892b5, #4a5a7a);
+            border-radius: 20px;
+            position: relative;
+        }
+
+        .drone-arm:before, .drone-arm:after {
+            content: '';
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background: #2a3450;
+            border-radius: 50%;
+            top: -5px;
+        }
+
+        .drone-arm:before { left: -15px; }
+        .drone-arm:after { right: -15px; }
+
+        .temp-indicator {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            background: rgba(0,0,0,0.6);
+            padding: 8px 16px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border-left: 3px solid #e74c3c;
+        }
+
+        /* Адаптивность */
+        @media (max-width: 1100px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="gradient-bg"></div>
+    <div class="gradient-bg-2"></div>
+
+    <div class="container">
+        <!-- Шапка -->
+        <header>
+            <div class="logo-area">
+                <div class="logo-icon">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="logo-text">
+                    <h1>DroneLight-Swap</h1>
+                    <span>Автоматизированная замена уличных ламп</span>
+                </div>
+            </div>
+
+            <div class="header-stats">
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-lightbulb"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>1,284</h3>
+                        <p>Всего ламп</p>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>23</h3>
+                        <p>Требуют замены</p>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-icon">
+                        <i class="fas fa-drone"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3>4/6</h3>
+                        <p>Дронов активно</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="online-badge">
+                <span class="online-dot"></span>
+                <span>Система онлайн · v2.4.0</span>
+            </div>
+        </header>
+
+        <!-- Навигация -->
+        <nav>
+            <div class="nav-item active">
+                <i class="fas fa-map-marked-alt"></i>
+                Карта ламп
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-drone"></i>
+                Управление дронами
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-clipboard-list"></i>
+                Планы замены
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-chart-line"></i>
+                Аналитика
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i>
+                Настройки
+            </div>
+        </nav>
+
+        <!-- Основная панель -->
+        <div class="dashboard-grid">
+            <!-- Карта -->
+            <div class="map-card">
+                <div class="card-header">
+                    <h2><i class="fas fa-map-pin" style="margin-right: 8px;"></i> Интерактивная карта освещения</h2>
+                    <div class="badge">Обновлено 2 мин назад</div>
+                </div>
+                <div class="map-placeholder">
+                    <div class="map-grid" id="mapGrid">
+                        <!-- Точки будут сгенерированы JS -->
+                    </div>
+                    <div class="map-legend">
+                        <div class="legend-item"><span class="legend-color" style="background: #2ecc71;"></span> Работает</div>
+                        <div class="legend-item"><span class="legend-color" style="background: #f39c12;"></span> Плановая замена</div>
+                        <div class="legend-item"><span class="legend-color" style="background: #e74c3c;"></span> Аварийная</div>
+                        <div class="legend-item"><span class="legend-color" style="background: #3498db;"></span> Дрон на задании</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Статус дронов и ближайшие задачи -->
+            <div class="status-panel">
+                <div class="drone-status">
+                    <div class="drone-row">
+                        <div class="drone-name">
+                            <div class="drone-icon"><i class="fas fa-drone"></i></div>
+                            <div>
+                                <h4>Дрон #Alpha-7</h4>
+                                <span style="font-size: 12px; color: #00c6ff;">Выполняет замену</span>
+                            </div>
+                        </div>
+                        <div class="drone-battery">
+                            <i class="fas fa-battery-three-quarters" style="color: #2ecc71;"></i>
+                            <span>85%</span>
+                        </div>
+                    </div>
+                    <div class="task-progress">
+                        <div class="progress-label">
+                            <span>Прогресс задачи</span>
+                            <span>65%</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: 65%;"></div>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; margin-top: 15px;">
+                        <div style="font-size: 12px; color: #8892b5;"><i class="far fa-clock"></i> Завершение: 12 мин</div>
+                        <div style="font-size: 12px; color: #8892b5;"><i class="fas fa-map-marker-alt"></i> Лампа #L-1423</div>
+                    </div>
+                </div>
+
+                <div>
+                    <div class="card-header" style="margin-bottom: 10px;">
+                        <h2>Очередь на замену</h2>
+                        <div class="badge">8 ламп</div>
+                    </div>
+                    <div class="lamp-list">
+                        <div class="lamp-item">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-high"></span>
+                                <div class="lamp-details">
+                                    <h4>Лампа #L-0872</h4>
+                                    <p>пр. Мира, 24 · перегорела</p>
+                                </div>
+                            </div>
+                            <div class="lamp-status status-bad">Срочно</div>
+                        </div>
+                        <div class="lamp-item">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-medium"></span>
+                                <div class="lamp-details">
+                                    <h4>Лампа #L-2317</h4>
+                                    <p>ул. Ленина, 5 · мигает</p>
+                                </div>
+                            </div>
+                            <div class="lamp-status">План</div>
+                        </div>
+                        <div class="lamp-item">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-high"></span>
+                                <div class="lamp-details">
+                                    <h4>Лампа #L-0934</h4>
+                                    <p>ул. Гагарина, 12 · не горит</p>
+                                </div>
+                            </div>
+                            <div class="lamp-status status-bad">Срочно</div>
+                        </div>
+                        <div class="lamp-item">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-low"></span>
+                                <div class="lamp-details">
+                                    <h4>Лампа #L-3512</h4>
+                                    <p>пл. Победы, 1 · профилактика</p>
+                                </div>
+                            </div>
+                            <div class="lamp-status">План</div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 15px;">
+                        <i class="fas fa-plus-circle"></i> Создать план замены
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3D Модель светильника -->
+        <div class="model-section">
+            <div class="model-header">
+                <h2><i class="fas fa-cube" style="margin-right: 10px;"></i> 3D визуализация текущего состояния</h2>
+                <div style="display: flex; gap: 12px;">
+                    <div class="badge" style="background: rgba(255,255,255,0.1);">
+                        <i class="fas fa-thermometer-half"></i> Температура: +42°C
+                    </div>
+                    <div class="badge" style="background: rgba(255,255,255,0.1);">
+                        <i class="fas fa-power-off" style="color: #2ecc71;"></i> Лампа: Вкл
+                    </div>
+                    <div class="badge" style="background: rgba(255,255,255,0.1);">
+                        <i class="fas fa-wind"></i> Ветер: 3 м/с
+                    </div>
+                </div>
+            </div>
+            <div class="model-viewer">
+                <div class="lamp-visualization">
+                    <div style="position: relative;">
+                        <div class="lamp-base"></div>
+                        <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #8892b5;">Светильник SmartPole v2</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; align-items: center;">
+                        <div class="drone-arm"></div>
+                        <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #8892b5;">Захват дрона (магнитный)</div>
+                    </div>
+                </div>
+                
+                <!-- Индикаторы состояния -->
+                <div class="temp-indicator">
+                    <i class="fas fa-temperature-high" style="color: #e74c3c;"></i>
+                    <span>Температура лампы: 42°C</span>
+                </div>
+                
+                <!-- Кнопки управления моделью -->
+                <div style="position: absolute; bottom: 20px; left: 30px; display: flex; gap: 10px;">
+                    <button class="btn" style="padding: 8px 16px; font-size: 13px;"><i class="fas fa-play"></i> Анимация замены</button>
+                    <button class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;"><i class="fas fa-sync-alt"></i> Повернуть</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Нижняя панель с дополнительной информацией -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 24px;">
+            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <h3 style="font-size: 16px;">Статистика замен</h3>
+                    <span style="color: #00c6ff;">За 7 дней</span>
+                </div>
+                <div style="display: flex; justify-content: space-around;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: 700;">42</div>
+                        <div style="font-size: 12px; color: #8892b5;">Выполнено</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: 700;">8</div>
+                        <div style="font-size: 12px; color: #8892b5;">В очереди</div>
+                    </div>
+                    <div style="text-align: center;">
+                        <div style="font-size: 28px; font-weight: 700;">3.2</div>
+                        <div style="font-size: 12px; color: #8892b5;">Ср. время (мин)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
+                <h3 style="font-size: 16px; margin-bottom: 15px;">Активные задания</h3>
+                <div style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-circle" style="color: #00c6ff; font-size: 10px;"></i> Дрон #A7 у лампы #L-1423</span>
+                        <span style="color: #8892b5;">65%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-circle" style="color: #f39c12; font-size: 10px;"></i> Дрон #B3 вылет к #L-0872</span>
+                        <span style="color: #8892b5;">30%</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span><i class="fas fa-circle" style="color: #2ecc71; font-size: 10px;"></i> Дрон #C1 на базе</span>
+                        <span style="color: #8892b5;">зарядка</span>
+                    </div>
+                </div>
+            </div>
+
+            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
+                <h3 style="font-size: 16px; margin-bottom: 15px;">Погодные условия</h3>
+                <div style="display: flex; gap: 20px; align-items: center;">
+                    <i class="fas fa-cloud-sun" style="font-size: 40px; color: #f39c12;"></i>
+                    <div>
+                        <div style="font-size: 24px; font-weight: 700;">+18°C</div>
+                        <div style="font-size: 12px; color: #8892b5;">Ветер: 3 м/с, влажность: 65%</div>
+                        <div style="font-size: 12px; color: #2ecc71;">✓ Условия пригодны для полетов</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Генерация карты с точками
+        document.addEventListener('DOMContentLoaded', function() {
+            const mapGrid = document.getElementById('mapGrid');
+            if (!mapGrid) return;
+
+            // Очищаем сетку
+            mapGrid.innerHTML = '';
+
+            // Создаем 200 точек для имитации карты
+            for (let i = 0; i < 200; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'map-dot';
+                
+                // Случайный статус (для демонстрации)
+                const rand = Math.random();
+                if (rand < 0.7) {
+                    dot.classList.add('dot-green'); // работает
+                } else if (rand < 0.85) {
+                    dot.classList.add('dot-yellow'); // плановая замена
+                } else if (rand < 0.95) {
+                    dot.classList.add('dot-red'); // аварийная
+                } else {
+                    dot.classList.add('dot-blue'); // дрон на задании
+                }
+                
+                mapGrid.appendChild(dot);
+            }
+        });
+    </script>
+</body>
+</html>
