@@ -6,6 +6,7 @@ class Config(BaseModel):
     env: str
     host: str
     port: str
+    database_url: str
 
 def init_config():
     env = Env()
@@ -13,5 +14,8 @@ def init_config():
     return Config(
         env=env("ENV"),
         host=env("HOST"),
-        port=env("PORT")
+        port=env("PORT"),
+        database_url=env("DATABASE_URL")
     )
+
+config = init_config()
