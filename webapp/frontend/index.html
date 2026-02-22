@@ -70,7 +70,7 @@
         }
 
         .logo-icon {
-            width: 48px;
+            width: 41px;
             height: 48px;
             background: linear-gradient(135deg, #00c6ff, #8a2be2);
             border-radius: 14px;
@@ -608,6 +608,7 @@
             }
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
 </head>
 <body>
     <div class="gradient-bg"></div>
@@ -663,49 +664,98 @@
         </header>
 
         <!-- Навигация -->
-        <nav>
-            <div class="nav-item active">
-                <i class="fas fa-map-marked-alt"></i>
-                Карта ламп
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-drone"></i>
-                Управление дронами
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-clipboard-list"></i>
-                Планы замены
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-chart-line"></i>
-                Аналитика
-            </div>
-            <div class="nav-item">
-                <i class="fas fa-cog"></i>
-                Настройки
-            </div>
+        <nav id="main-nav">
+        <div class="nav-item active" data-page="map">
+            <i class="fas fa-map-marked-alt"></i> Карта ламп
+        </div>
+        <div class="nav-item" data-page="remote">
+            <i class="fas fa-drone"></i> Управление дронами
+        </div>
+        <div class="nav-item" data-page="remote">
+            <i class="fas fa-clipboard-list"></i> Планы замены
+        </div>
+        <div class="nav-item" data-page="remote">
+            <i class="fas fa-chart-line"></i> Аналитика
+        </div>
+        <div class="nav-item" data-page="remote">
+            <i class="fas fa-cog"></i> Настройки
+        </div>
         </nav>
 
-        <!-- Основная панель -->
+    <div id="page-map" class="page-section">
         <div class="dashboard-grid">
-            <!-- Карта -->
             <div class="map-card">
-                <div class="card-header">
-                    <h2><i class="fas fa-map-pin" style="margin-right: 8px;"></i> Интерактивная карта освещения</h2>
-                    <div class="badge">Обновлено 2 мин назад</div>
+                <div class="card-header"><h2>Карта освещения</h2></div>
+                <div class="map-placeholder"><div class="map-grid" id="mapGrid"></div></div>
+            </div>
+
+            <div class="status-panel">
+                <div class="drone-status">
+                    <h4>Дрон #Alpha-7</h4>
+                    <span style="font-size: 12px; color: #00c6ff;">Выполняет замену</span>
+                    <div class="drone-battery" style="margin-right: 20px;">
+                            <i class="fas fa-battery-three-quarters" style="color: #2ecc71;"></i>
+                            <span>85%</span>
+                    </div>
+                    <div class="progress-bar"><div class="progress-fill"></div></div>
                 </div>
-                <div class="map-placeholder">
-                    <div class="map-grid" id="mapGrid">
-                        <!-- Точки будут сгенерированы JS -->
+
+                <div class="queue-area">
+                    <div class="card-header">
+                        <h2>Очередь на замену</h2>
+                        <div class="badge" id="queue-count">4 лампы</div>
                     </div>
-                    <div class="map-legend">
-                        <div class="legend-item"><span class="legend-color" style="background: #2ecc71;"></span> Работает</div>
-                        <div class="legend-item"><span class="legend-color" style="background: #f39c12;"></span> Плановая замена</div>
-                        <div class="legend-item"><span class="legend-color" style="background: #e74c3c;"></span> Аварийная</div>
-                        <div class="legend-item"><span class="legend-color" style="background: #3498db;"></span> Дрон на задании</div>
+                    <div id="lamp-queue" class="lamp-list">
+                        <div class="lamp-item" data-id="L-0872">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-high"></span>
+                                <div class="lamp-details"><h4>Лампа #L-0872</h4><p>пр. Мира, 24</p></div>
+                            </div>
+                            <div class="lamp-status status-bad">Срочно</div>
+                        </div>
+                        <div class="lamp-item" data-id="L-2317">
+                            <div class="lamp-info">
+                                <span class="lamp-priority priority-medium"></span>
+                                <div class="lamp-details"><h4>Лампа #L-2317</h4><p>ул. Ленина, 5</p></div>
+                            </div>
+                            <div class="lamp-status">План</div>
+                        </div>
                     </div>
+                    <button class="btn btn-outline" id="create-plan-btn" style="width: 100%; margin-top: 15px;">
+                        <i class="fas fa-plus-circle"></i> Создать план замены
+                    </button>
                 </div>
             </div>
+        </div>
+        <div class="model-section">...</div>
+    </div>
+
+    <div id="page-remote" class="page-section" style="display: none;">
+        <div style="background: rgba(18, 25, 45, 0.6); border-radius: 32px; padding: 40px; border: 1px solid #252f44; min-height: 500px;">
+            <div id="dynamic-content"></div>
+        </div>
+    </div>
+
+        <!-- Основная панель -->
+<!--        <div class="dashboard-grid">-->
+<!--            &lt;!&ndash; Карта &ndash;&gt;-->
+<!--            <div class="map-card">-->
+<!--                <div class="card-header">-->
+<!--                    <h2><i class="fas fa-map-pin" style="margin-right: 8px;"></i> Интерактивная карта освещения</h2>-->
+<!--                    <div class="badge">Обновлено 2 мин назад</div>-->
+<!--                </div>-->
+<!--                <div class="map-placeholder">-->
+<!--                    <div class="map-grid" id="mapGrid">-->
+<!--                        &lt;!&ndash; Точки будут сгенерированы JS &ndash;&gt;-->
+<!--                    </div>-->
+<!--                    <div class="map-legend">-->
+<!--                        <div class="legend-item"><span class="legend-color" style="background: #2ecc71;"></span> Работает</div>-->
+<!--                        <div class="legend-item"><span class="legend-color" style="background: #f39c12;"></span> Плановая замена</div>-->
+<!--                        <div class="legend-item"><span class="legend-color" style="background: #e74c3c;"></span> Аварийная</div>-->
+<!--                        <div class="legend-item"><span class="legend-color" style="background: #3498db;"></span> Дрон на задании</div>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
 
             <!-- Статус дронов и ближайшие задачи -->
             <div class="status-panel">
@@ -791,6 +841,24 @@
                 </div>
             </div>
         </div>
+        <div class="container">
+
+    <div id="content-map" class="page-section">
+        <div class="dashboard-grid">
+            </div>
+    </div>
+
+    <div id="content-drones" class="page-section" style="display: none;">
+        <div style="background: rgba(18, 25, 45, 0.6); border-radius: 24px; padding: 30px; border: 1px solid #252f44; min-height: 400px;">
+            <h2 style="margin-bottom: 20px;"><i class="fas fa-drone"></i> Панель управления флотом</h2>
+
+            <div id="drone-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+                <p style="color: #8892b5;">Ожидание данных от сервера...</p>
+            </div>
+        </div>
+    </div>
+
+</div>
 
         <!-- 3D Модель светильника -->
         <div class="model-section">
@@ -914,10 +982,83 @@
                 } else {
                     dot.classList.add('dot-blue'); // дрон на задании
                 }
-                
+
                 mapGrid.appendChild(dot);
             }
         });
     </script>
+    <script>
+    const socket = new WebSocket('ws://localhost:8000/ws');
+
+    // 1. ПЕРЕТАСКИВАНИЕ (SortableJS)
+    const queueEl = document.getElementById('lamp-queue');
+    if (queueEl) {
+        new Sortable(queueEl, {
+            animation: 150,
+            ghostClass: 'sortable-ghost',
+            onEnd: function() {
+                const order = Array.from(queueEl.children).map(item => item.dataset.id);
+                socket.send(JSON.stringify({ action: "UPDATE_QUEUE_ORDER", new_order: order }));
+            }
+        });
+    }
+
+    // 2. НАВИГАЦИЯ
+    document.querySelectorAll('.nav-item').forEach(item => {
+        item.onclick = function() {
+            const text = this.innerText.trim();
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            this.classList.add('active');
+
+            if (text === "Карта ламп") {
+                showPage('page-map');
+            } else {
+                socket.send(JSON.stringify({ page: text }));
+            }
+        };
+    });
+
+    // 3. ПРИЕМ ДАННЫХ
+    socket.onmessage = function(event) {
+        const data = JSON.parse(event.data);
+        if (data.type === "PAGE_DATA") {
+            document.getElementById('dynamic-content').innerHTML = data.html;
+            showPage('page-remote');
+        }
+    };
+
+    function showPage(id) {
+        document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
+        document.getElementById(id).style.display = 'block';
+    }
+
+    // 4. КНОПКА СОЗДАНИЯ
+    document.getElementById('create-plan-btn').onclick = function() {
+        const newId = "L-" + Math.floor(1000 + Math.random() * 9000);
+        socket.send(JSON.stringify({ action: "ADD_TO_PLAN", lamp_id: newId }));
+
+        const newItem = document.createElement('div');
+        newItem.className = 'lamp-item';
+        newItem.dataset.id = newId;
+        newItem.innerHTML = `
+            <div class="lamp-info">
+                <span class="lamp-priority priority-medium"></span>
+                <div class="lamp-details"><h4>Лампа #${newId}</h4><p>Новый план</p></div>
+            </div>
+            <div class="lamp-status">План</div>`;
+        queueEl.prepend(newItem);
+    };
+
+    // Генерация точек карты (для красоты)
+    const grid = document.getElementById('mapGrid');
+    if(grid) {
+        for(let i=0; i<60; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'map-dot dot-green';
+            if(Math.random() > 0.9) dot.className = 'map-dot dot-red';
+            grid.appendChild(dot);
+        }
+    }
+</script>
 </body>
 </html>
