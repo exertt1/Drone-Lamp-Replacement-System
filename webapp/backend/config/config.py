@@ -7,6 +7,7 @@ class Config(BaseModel):
     host: str
     port: str
     database_url: str
+    yandex_maps_api_key: str
 
 def init_config():
     env = Env()
@@ -15,7 +16,8 @@ def init_config():
         env=env("ENV"),
         host=env("HOST"),
         port=env("PORT"),
-        database_url=env("DATABASE_URL")
+        database_url=env("DATABASE_URL"),
+        yandex_maps_api_key=env("YANDEX_MAPS_API_KEY")
     )
 
 config = init_config()

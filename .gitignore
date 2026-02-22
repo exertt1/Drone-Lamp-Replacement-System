@@ -1,7 +1,9 @@
 webapp/backend/.env
 
 .venv
-
+venv
 .idea
 
 Unity
+
+*.log

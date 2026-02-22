@@ -6,4 +6,7 @@ def init_logger():
         sink=sys.stdout,
         level="DEBUG"
     )
+    logger.add(
+        sink=sys.stdout
+    )
     return logger

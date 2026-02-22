@@ -247,6 +247,21 @@
             overflow: hidden;
             border: 1px solid #252f44;
         }
+        .map-placeholder{
+          background: #0f1422;
+          border-radius: 24px;
+          height: 70vh;      /* <-- вместо 300px */
+          min-height: 520px; /* чтобы на маленьких экранах не сжималась */
+          position: relative;
+          overflow: hidden;
+          border: 1px solid #252f44;
+        }
+
+        #ymap{
+          width: 100%;
+          height: 100%;
+          border-radius: 18px;
+        }
 
         /* Имитация карты с точками */
         .map-grid {
@@ -628,6 +643,7 @@
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+    <script src="https://api-maps.yandex.ru/2.1/?apikey=__YANDEX_KEY__&lang=ru_RU"></script>
 </head>
 <body>
     <div class="gradient-bg"></div>
@@ -705,7 +721,9 @@
         <div class="dashboard-grid">
             <div class="map-card">
                 <div class="card-header"><h2>Карта освещения</h2></div>
-                <div class="map-placeholder"><div class="map-grid" id="mapGrid"></div></div>
+                <div class="map-placeholder">
+                    <div id="ymap" style="width:100%;height:100%;border-radius:18px;"></div>
+                </div>
             </div>
 
             <div class="status-panel">
@@ -983,30 +1001,92 @@
 
       const queueEl = document.getElementById('lamp-queue');
       const queueCountEl = document.getElementById('queue-count');
-      const mapGrid = document.getElementById('mapGrid');
+      // const mapGrid = document.getElementById('mapGrid');
 
       let sortableInstance = null;
+      let ymap = null;
 
-      // 1) Карта: рисуем 20x10 точек
-      function renderMapDots() {
-        if (!mapGrid) return;
+// Пример: центр Казани. Потом поставим хаб в точку, которую выберешь.
+    const HUB = { lat: 55.796127, lon: 49.106414 };
 
-        mapGrid.innerHTML = '';
-        const total = 200;
+    // Пример фонарей (потом заменим на реальные)
+    let lamps = [
+      { id: "L-1001", lat: 55.7972, lon: 49.1056, status: "OK" },
+      { id: "L-1002", lat: 55.7958, lon: 49.1074, status: "PLAN" },
+      { id: "L-1003", lat: 55.7969, lon: 49.1090, status: "URGENT" },
+    ];
 
-        for (let i = 0; i < total; i++) {
-          const dot = document.createElement('div');
-          dot.className = 'map-dot';
+    function statusToColor(status) {
+      if (status === "URGENT") return "#ff4d4d";
+      if (status === "PLAN") return "#f5c542";
+      if (status === "IN_PROGRESS") return "#4da3ff";
+      return "#35d07f";
+    }
 
-          const r = Math.random();
-          if (r < 0.70) dot.classList.add('dot-green');
-          else if (r < 0.85) dot.classList.add('dot-yellow');
-          else if (r < 0.95) dot.classList.add('dot-red');
-          else dot.classList.add('dot-blue');
-
-          mapGrid.appendChild(dot);
-        }
+    function initYandexMap() {
+      if (!window.ymaps) {
+        console.error("ymaps не загрузился. Проверь ключ/скрипт Яндекса.");
+        return;
       }
+
+      ymaps.ready(() => {
+        ymap = new ymaps.Map("ymap", {
+          center: [HUB.lat, HUB.lon],
+          zoom: 15,
+          controls: ["zoomControl", "geolocationControl"]
+        });
+
+        // Хаб
+        const hubMark = new ymaps.Placemark([HUB.lat, HUB.lon], {
+          balloonContent: "<b>Хаб дронов</b>"
+        }, {
+          preset: "islands#violetDotIcon"
+        });
+        ymap.geoObjects.add(hubMark);
+
+        // Фонари
+        lamps.forEach(l => {
+          const pm = new ymaps.Placemark([l.lat, l.lon], {
+            balloonContent: `<b>Фонарь ${l.id}</b><br/>Статус: ${l.status}`
+          }, {
+            preset: "islands#circleIcon",
+            iconColor: statusToColor(l.status)
+          });
+
+          pm.events.add("click", () => {
+            socket.send(JSON.stringify({
+              action: "ADD_TO_PLAN",
+              lamp_id: l.id,
+              loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
+              status: "План",
+              type: "medium"
+            }));
+          });
+
+          ymap.geoObjects.add(pm);
+        });
+      });
+    }
+      // 1) Карта: рисуем 20x10 точек
+      // function renderMapDots() {
+      //   if (!mapGrid) return;
+      //
+      //   mapGrid.innerHTML = '';
+      //   const total = 200;
+      //
+      //   for (let i = 0; i < total; i++) {
+      //     const dot = document.createElement('div');
+      //     dot.className = 'map-dot';
+      //
+      //     const r = Math.random();
+      //     if (r < 0.70) dot.classList.add('dot-green');
+      //     else if (r < 0.85) dot.classList.add('dot-yellow');
+      //     else if (r < 0.95) dot.classList.add('dot-red');
+      //     else dot.classList.add('dot-blue');
+      //
+      //     mapGrid.appendChild(dot);
+      //   }
+      // }
 
       // 2) Drag&Drop очереди
       function initSortable() {
@@ -1099,7 +1179,8 @@
 
           if (text === "Карта ламп") {
             showPage('page-map');
-            renderMapDots();              // <-- важно
+            // renderMapDots();              // <-- важно
+            setTimeout(() => { if (ymap) ymap.container.fitToViewport(); }, 50);
           } else {
             socket.send(JSON.stringify({ page: text }));
           }
@@ -1122,7 +1203,8 @@
       }
 
       // 8) Старт
-      renderMapDots();
+        initYandexMap();
+      // renderMapDots();
       initSortable();
     </script>
 
