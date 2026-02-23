@@ -23,12 +23,7 @@
 
 ## Содержимое репозитория
 
-.
-├─ webapp/
-│  ├─ main.py            # FastAPI + WebSocket прототип
-│  └─ requirements.txt   # зависимости
-└─ .gitignore            # .env / .venv
----
+![img_1.png](img_1.png)
 
 ## Быстрый старт 🚀
 
@@ -38,14 +33,23 @@
 
 ### 2) Установка
 ```bash
-cd webapp
+Перходим в корневую папку
+заходим в .env
+DATABASE_URL=postgresql://<имя пользователя>:<пароль>@localhost:<порт>/<название бд>
+YANDEX_MAPS_API_KEY=ВАШ АПИ КЛЮЧ
 
+Пишем в терминал
 python -m venv .venv
 # Linux/macOS:
 source .venv/bin/activate
 # Windows (PowerShell):
 # .venv\Scripts\Activate.ps1
 
+#Устанавливаем зависимости
 pip install -r requirements.txt
 
+#Инициализируем базу данных
+python init_db.py
+
+#запускаем веб-сервер
 uvicorn main:app --reload --host 0.0.0.0 --port 8000
