@@ -1,14 +1,13 @@
 import os
-import asyncpg
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import asyncpg
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse
 
 from webapp.backend.config.config import init_config
 from webapp.backend.logger.logger import init_logger
-from webapp.backend.models.models import ConnectionManager
 from webapp.backend.database.db import (
     fetch_queue,
     add_task_to_queue,
@@ -16,50 +15,118 @@ from webapp.backend.database.db import (
     update_queue_order,
     fetch_lamps_in_bbox,
 )
+from fastapi.staticfiles import StaticFiles
 
-# config/logger ДО lifespan
+# -------------------- basic setup --------------------
 config = init_config()
 logger = init_logger()
 
 YANDEX_KEY = os.getenv("YANDEX_MAPS_API_KEY", "") or getattr(config, "yandex_maps_api_key", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "") or getattr(config, "database_url", "")
 
+# -------------------- websocket manager --------------------
+class ConnectionManager:
+    def __init__(self):
+        self.active: set[WebSocket] = set()
 
+    async def connect(self, ws: WebSocket):
+        await ws.accept()
+        self.active.add(ws)
+
+    def disconnect(self, ws: WebSocket):
+        self.active.discard(ws)
+
+    async def broadcast(self, payload: dict):
+        dead = []
+        for ws in list(self.active):
+            try:
+                await ws.send_json(payload)
+            except Exception:
+                dead.append(ws)
+        for ws in dead:
+            self.disconnect(ws)
+
+manager = ConnectionManager()
+
+# -------------------- db pool lifecycle --------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     if not DATABASE_URL:
-        raise RuntimeError("DATABASE_URL не задан (ни в env, ни в config.database_url)")
+        raise RuntimeError("DATABASE_URL not set (env DATABASE_URL or config.database_url).")
     app.state.db_pool = await asyncpg.create_pool(dsn=DATABASE_URL, min_size=2, max_size=20)
     try:
         yield
     finally:
         await app.state.db_pool.close()
 
-
 app = FastAPI(lifespan=lifespan)
-manager = ConnectionManager()
 
-drone_state = {
-    "id": "Alpha-7",
-    "mode": "IDLE",
-    "battery": 85,
-    "online": True
-}
-
-
+# -------------------- helpers --------------------
 async def lamp_exists(pool: asyncpg.Pool, lamp_id: str) -> bool:
     async with pool.acquire() as conn:
-        v = await conn.fetchval("SELECT 1 FROM lamps WHERE id=$1", lamp_id)
-        return bool(v)
+        return bool(await conn.fetchval("SELECT 1 FROM lamps WHERE id=$1", lamp_id))
 
+async def send_drones_state(ws: WebSocket, pool: asyncpg.Pool) -> None:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, code, lat, lon, battery_percent, status, current_task_id
+            FROM drones
+            ORDER BY id
+            """
+        )
+    await ws.send_json({
+        "type": "DRONES_STATE",
+        "drones": [
+            {
+                "id": int(r["id"]),
+                "code": r["code"],
+                "lat": float(r["lat"]),
+                "lon": float(r["lon"]),
+                "battery_percent": int(r["battery_percent"]),
+                "status": r["status"],
+                "current_task_id": r["current_task_id"],
+            }
+            for r in rows
+        ],
+    })
 
+async def broadcast_drones_state(pool: asyncpg.Pool) -> None:
+    async with pool.acquire() as conn:
+        rows = await conn.fetch(
+            """
+            SELECT id, code, lat, lon, battery_percent, status, current_task_id
+            FROM drones
+            ORDER BY id
+            """
+        )
+    await manager.broadcast({
+        "type": "DRONES_STATE",
+        "drones": [
+            {
+                "id": int(r["id"]),
+                "code": r["code"],
+                "lat": float(r["lat"]),
+                "lon": float(r["lon"]),
+                "battery_percent": int(r["battery_percent"]),
+                "status": r["status"],
+                "current_task_id": r["current_task_id"],
+            }
+            for r in rows
+        ],
+    })
+
+app.mount("/assets", StaticFiles(directory="/home/exertt1/Desktop/tupolev/Drone-Lamp-Replacement-System/webapp/frontend/assets"), name="assets")
+
+# -------------------- websocket endpoint --------------------
 @app.websocket("/ws")
 async def websocket_endpoint(ws: WebSocket):
     await manager.connect(ws)
     pool: asyncpg.Pool = ws.app.state.db_pool
 
-    # сразу отдаём текущую очередь
+    # initial data
     await ws.send_json({"type": "QUEUE_UPDATE", "queue": await fetch_queue(pool)})
+    await send_drones_state(ws, pool)
 
     try:
         while True:
@@ -68,6 +135,10 @@ async def websocket_endpoint(ws: WebSocket):
 
             if action == "GET_QUEUE":
                 await ws.send_json({"type": "QUEUE_UPDATE", "queue": await fetch_queue(pool)})
+                continue
+
+            if action == "GET_DRONES":
+                await send_drones_state(ws, pool)
                 continue
 
             if action == "GET_LAMPS":
@@ -90,7 +161,6 @@ async def websocket_endpoint(ws: WebSocket):
                 lamp_id = msg["lamp_id"]
                 pr_type = msg.get("type", "medium")  # low/medium/high
 
-                # ✅ главное: проверяем наличие лампы, иначе не создаём задачу
                 if not await lamp_exists(pool, lamp_id):
                     await ws.send_json({"type": "ERROR", "code": "LAMP_NOT_FOUND", "lamp_id": lamp_id})
                     continue
@@ -105,6 +175,9 @@ async def websocket_endpoint(ws: WebSocket):
                     "lamp_id": lamp_id,
                     "status": ("URGENT" if pr_type == "high" else "PLAN")
                 })
+
+                # drone positions might be updated later; send once anyway
+                await broadcast_drones_state(pool)
                 continue
 
             if action == "REMOVE_FROM_PLAN":
@@ -127,7 +200,7 @@ async def websocket_endpoint(ws: WebSocket):
                 await manager.broadcast({"type": "QUEUE_UPDATE", "queue": queue})
                 continue
 
-            # (опционально) меню страниц
+            # optional pages
             page = msg.get("page")
             if page and page != "Карта ламп":
                 queue_len = len(await fetch_queue(pool))
@@ -142,13 +215,15 @@ async def websocket_endpoint(ws: WebSocket):
     except WebSocketDisconnect:
         manager.disconnect(ws)
 
-
+# -------------------- http root --------------------
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    html_path = Path(__file__).parent / "webapp" / "frontend" / "index.html"
+    # prefer your project path; fallback to current folder
+    html_path = Path("webapp/frontend/index.html")
     if not html_path.exists():
-        # если у тебя другой путь — оставь как было в проекте
-        html_path = Path("webapp/frontend/index.html")
+        html_path = Path(__file__).parent / "webapp" / "frontend" / "index.html"
+    if not html_path.exists():
+        html_path = Path("index.html")
 
     html = html_path.read_text(encoding="utf-8")
     html = html.replace("__YANDEX_KEY__", YANDEX_KEY)

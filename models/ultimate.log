@@ -1,0 +1,23 @@
+
+          NX-OBJ Save As
+
+File to export: C:\Users\jakel\OneDrive\Документы\Lamp-changer\ultimate_stp.prt
+
+INFO: Options
+INFO: -------
+INFO: Export Units.......: millimeters
+INFO: Chordal Tolerance..: 0.080000 millimeters
+INFO: Angular Tolerance..: 18.000000 degrees
+INFO: Flatten Assembly...: on
+INFO: 
+INFO:       Summary of Obj Entities
+INFO: 
+INFO: Entity Type                                                   Count
+INFO: -----------                                                   ------
+INFO: Node Count ...........................................:   2
+INFO: Geometry Count........................................:   1
+INFO: Texture Count.........................................:   0
+INFO: Material Count........................................:   13
+
+Export Successful
+Output OBJ file : C:\Users\jakel\OneDrive\Документы\Lamp-changer\ultimate.obj

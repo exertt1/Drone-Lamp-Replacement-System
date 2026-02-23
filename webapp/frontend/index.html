@@ -5,21 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Drone Lamp Replacement System</title>
 
-  <!-- Yandex Maps (ключ подставляется сервером: __YANDEX_KEY__) -->
   <script src="https://api-maps.yandex.ru/2.1/?apikey=__YANDEX_KEY__&lang=ru_RU"></script>
-
-  <!-- SortableJS -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
-
-  <!-- (опционально) иконки -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
   <style>
     :root{
       --bg: #0b1020;
-      --panel: rgba(255,255,255,0.04);
-      --panel2: rgba(255,255,255,0.06);
-      --stroke: rgba(255,255,255,0.10);
       --text: #e6f1ff;
       --muted: #8892b5;
       --accent: #00c6ff;
@@ -29,7 +21,6 @@
       --info: #4da3ff;
       --radius: 20px;
     }
-
     *{ box-sizing:border-box; }
     body{
       margin:0;
@@ -40,12 +31,36 @@
       color: var(--text);
       min-height: 100vh;
     }
+    .app{ display:flex; min-height:100vh; }
+    /* PiP окно */
+  .pip{
+    position: fixed;
+    right: 16px;
+    bottom: 85px;
 
-    .app{
-      display:flex;
-      min-height:100vh;
+    width: 540px;          /* было 360 */
+    height: 360px;         /* было 220 */
+
+    max-width: 42vw;       /* чтобы не занимало пол экрана */
+    max-height: 32vh;
+
+    z-index: 9999;
+    border-radius: 16px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(15,20,34,0.92);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  }
+
+  /* адаптив: на узких экранах ещё меньше */
+  @media (max-width: 900px){
+    .pip{
+      width: 260px;
+      height: 150px;
+      max-width: 60vw;
+      max-height: 28vh;
     }
-
+  }
     /* Sidebar */
     .sidebar{
       width: 270px;
@@ -55,51 +70,30 @@
       backdrop-filter: blur(10px);
     }
     .brand{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding: 12px 12px;
+      display:flex; align-items:center; gap:10px;
+      padding: 12px;
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
       margin-bottom: 16px;
     }
     .brand i{ color: var(--accent); }
-    .brand .title{
-      font-weight:700;
-      letter-spacing:0.4px;
-      line-height:1.1;
-    }
-    .brand .sub{
-      font-size:12px;
-      color: var(--muted);
-      margin-top: 2px;
-    }
+    .brand .title{ font-weight:700; letter-spacing:0.4px; line-height:1.1; }
+    .brand .sub{ font-size:12px; color: var(--muted); margin-top:2px; }
 
-    .nav{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin-top: 14px;
-    }
+    .nav{ display:flex; flex-direction:column; gap:8px; margin-top:14px; }
     .nav-item{
-      user-select:none;
-      cursor:pointer;
-      padding: 12px 12px;
+      user-select:none; cursor:pointer;
+      padding: 12px;
       border-radius: 14px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
       color: var(--text);
-      display:flex;
-      align-items:center;
-      gap:10px;
+      display:flex; align-items:center; gap:10px;
       transition: 150ms ease;
     }
     .nav-item i{ color: rgba(255,255,255,0.7); }
-    .nav-item:hover{
-      border-color: rgba(0,198,255,0.35);
-      background: rgba(0,198,255,0.06);
-    }
+    .nav-item:hover{ border-color: rgba(0,198,255,0.35); background: rgba(0,198,255,0.06); }
     .nav-item.active{
       border-color: rgba(0,198,255,0.55);
       box-shadow: 0 0 0 1px rgba(0,198,255,0.2) inset;
@@ -114,7 +108,6 @@
       padding: 18px;
       gap: 14px;
     }
-
     .topbar{
       display:flex;
       align-items:center;
@@ -126,30 +119,14 @@
       background: rgba(255,255,255,0.03);
       backdrop-filter: blur(10px);
     }
-    .topbar .left{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .topbar h1{
-      margin:0;
-      font-size: 18px;
-      letter-spacing: 0.2px;
-    }
-    .topbar .hint{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .topbar .left{ display:flex; flex-direction:column; gap:2px; }
+    .topbar h1{ margin:0; font-size:18px; letter-spacing:0.2px; }
+    .topbar .hint{ margin:0; font-size:12px; color: var(--muted); }
 
     .statusline{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-      align-items:center;
-      font-size: 12px;
-      color: var(--muted);
+      display:flex; gap:10px; flex-wrap:wrap;
+      justify-content:flex-end; align-items:center;
+      font-size: 12px; color: var(--muted);
     }
     .pill{
       padding: 6px 10px;
@@ -160,24 +137,18 @@
       align-items:center;
       gap:8px;
     }
-    .dot{
-      width:8px;height:8px;border-radius:50%;
-      background: var(--muted);
-      display:inline-block;
-    }
+    .dot{ width:8px;height:8px;border-radius:50%; background: var(--muted); display:inline-block; }
     .dot.good{ background: var(--good); }
     .dot.warn{ background: var(--warn); }
     .dot.bad{ background: var(--bad); }
     .dot.info{ background: var(--info); }
 
-    /* Layout grid */
     .grid{
       display:grid;
       grid-template-columns: 1.55fr 0.95fr;
       gap: 14px;
       align-items: stretch;
     }
-
     .card{
       border-radius: var(--radius);
       border: 1px solid rgba(255,255,255,0.08);
@@ -185,7 +156,6 @@
       backdrop-filter: blur(10px);
       overflow:hidden;
     }
-
     .card-header{
       padding: 14px 16px;
       border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -194,21 +164,9 @@
       justify-content:space-between;
       gap: 12px;
     }
-    .card-header .h{
-      display:flex;
-      flex-direction:column;
-      gap:2px;
-    }
-    .card-header h2{
-      margin:0;
-      font-size: 14px;
-      letter-spacing:0.3px;
-    }
-    .card-header p{
-      margin:0;
-      font-size: 12px;
-      color: var(--muted);
-    }
+    .card-header .h{ display:flex; flex-direction:column; gap:2px; }
+    .card-header h2{ margin:0; font-size:14px; letter-spacing:0.3px; }
+    .card-header p{ margin:0; font-size:12px; color: var(--muted); }
 
     .btn{
       cursor:pointer;
@@ -222,23 +180,16 @@
       display:inline-flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
     }
-    .btn:hover{
-      background: rgba(0,198,255,0.16);
-      border-color: rgba(0,198,255,0.45);
-    }
+    .btn:hover{ background: rgba(0,198,255,0.16); border-color: rgba(0,198,255,0.45); }
     .btn.secondary{
       border-color: rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.05);
     }
-    .btn.secondary:hover{
-      background: rgba(255,255,255,0.08);
-    }
+    .btn.secondary:hover{ background: rgba(255,255,255,0.08); }
 
-    /* Map */
-    .map-wrap{
-      padding: 14px;
-    }
+    .map-wrap{ padding: 14px; }
     .map-placeholder{
       border-radius: 18px;
       border: 1px solid rgba(255,255,255,0.10);
@@ -247,88 +198,35 @@
       height: 70vh;
       min-height: 520px;
     }
-    #ymap{
-      width: 100%;
-      height: 100%;
-    }
+    #ymap{ width:100%; height:100%; }
 
-    /* Queue */
-    .queue-wrap{
-      padding: 14px;
-      display:flex;
-      flex-direction:column;
-      gap: 12px;
-    }
-    .queue-meta{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-    .queue-count{
-      font-size: 12px;
-      color: var(--muted);
-    }
-    #lamp-queue{
-      display:flex;
-      flex-direction:column;
-      gap:10px;
-      min-height: 120px;
-    }
+    .queue-wrap{ padding: 14px; display:flex; flex-direction:column; gap: 12px; }
+    .queue-meta{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .queue-count{ font-size:12px; color: var(--muted); }
+    #lamp-queue{ display:flex; flex-direction:column; gap:10px; min-height: 120px; }
 
     .lamp-item{
       border-radius: 16px;
       border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.04);
-      padding: 12px 12px;
+      padding: 12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
       cursor: grab;
     }
-    .lamp-info{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      min-width: 0;
-    }
-    .lamp-details{
-      min-width:0;
-    }
-    .lamp-details h4{
-      margin:0;
-      font-size: 13px;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-    .lamp-details p{
-      margin:3px 0 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width: 240px;
-    }
+    .lamp-info{ display:flex; align-items:center; gap:10px; min-width:0; }
+    .lamp-details{ min-width:0; }
+    .lamp-details h4{ margin:0; font-size: 13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .lamp-details p{ margin:3px 0 0 0; font-size: 12px; color: var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width: 240px; }
 
-    .lamp-priority{
-      width: 10px; height: 10px;
-      border-radius: 999px;
-      display:inline-block;
-      box-shadow: 0 0 0 3px rgba(255,255,255,0.02);
-    }
+    .lamp-priority{ width: 10px; height: 10px; border-radius: 999px; display:inline-block; box-shadow: 0 0 0 3px rgba(255,255,255,0.02); }
     .priority-high{ background: var(--bad); }
     .priority-medium{ background: var(--warn); }
     .priority-low{ background: var(--good); }
 
-    .lamp-right{
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
+    .lamp-right{ display:flex; align-items:center; gap:10px; }
     .lamp-status{
       font-size: 12px;
       padding: 6px 10px;
@@ -347,7 +245,7 @@
     .lamp-del{
       border: 1px solid rgba(255,255,255,0.12);
       background: rgba(255,255,255,0.06);
-      color: var(--text);
+      color: #fff;
       border-radius: 12px;
       padding: 6px 10px;
       cursor:pointer;
@@ -357,15 +255,11 @@
       border-color: rgba(255, 80, 80, 0.35);
     }
 
-    .sortable-ghost{
-      opacity: 0.45;
-    }
+    .sortable-ghost{ opacity: 0.45; }
 
-    /* Pages */
     .page-section{ display:none; }
-    #page-map{ display:block; } /* default */
+    #page-map{ display:block; }
 
-    /* Responsive */
     @media (max-width: 1100px){
       .grid{ grid-template-columns: 1fr; }
       .sidebar{ width: 240px; }
@@ -376,6 +270,136 @@
       .sidebar{ width: 100%; border-right:none; border-bottom:1px solid rgba(255,255,255,0.08); }
       .main{ padding: 12px; }
       .map-placeholder{ height: 60vh; min-height: 420px; }
+    }
+
+    /* ===== Modal (animation) ===== */
+    .modal{
+      position:fixed;
+      inset:0;
+      z-index:9999;
+    }
+    .modal-backdrop{
+      position:absolute;
+      inset:0;
+      background: rgba(0,0,0,0.55);
+      backdrop-filter: blur(6px);
+    }
+    .modal-card{
+      position:relative;
+      width:min(900px, 92vw);
+      margin: 6vh auto 0 auto;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(15,20,34,0.92);
+      overflow:hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .modal-header{
+      padding: 14px 16px;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .modal-title{ font-weight:700; }
+    .modal-sub{ font-size:12px; color:#8892b5; margin-top:2px; }
+    .modal-close{
+      cursor:pointer;
+      border:1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color:#fff;
+      border-radius: 12px;
+      padding: 6px 10px;
+    }
+    .modal-footer{
+      padding: 14px 16px;
+      display:flex;
+      gap:10px;
+      justify-content:flex-end;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .anim-stage{
+      position:relative;
+      height: 420px;
+      margin: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: radial-gradient(700px 350px at 20% 30%, rgba(0,198,255,0.12), transparent 60%),
+                  radial-gradient(700px 350px at 80% 60%, rgba(53,208,127,0.10), transparent 60%),
+                  rgba(255,255,255,0.03);
+      overflow:hidden;
+    }
+    .hub, .lamp{
+      position:absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color:#e6f1ff;
+      font-weight:600;
+    }
+    .hub{ left: 24px; }
+    .lamp{ right: 24px; }
+
+    .path{
+      position:absolute;
+      top: 50%;
+      left: 120px;
+      right: 120px;
+      height: 2px;
+      transform: translateY(-50%);
+      background: linear-gradient(90deg, rgba(0,198,255,0.8), rgba(255,255,255,0.08), rgba(53,208,127,0.8));
+      opacity:0.7;
+    }
+    .drone{
+      position:absolute;
+      top: 50%;
+      left: 120px;
+      transform: translate(-50%, -50%);
+      width: 44px;
+      height: 44px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      border-radius: 14px;
+      border: 1px solid rgba(0,198,255,0.35);
+      background: rgba(0,198,255,0.10);
+      font-size: 20px;
+      transition: left 4.5s linear;
+    }
+    .status{
+      position:absolute;
+      left: 16px;
+      bottom: 16px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.05);
+      color:#8892b5;
+      font-size: 12px;
+    }
+
+    .pulse{
+      position:absolute;
+      top: 50%;
+      right: 46px;
+      transform: translate(50%,-50%);
+      width: 14px; height: 14px;
+      border-radius: 999px;
+      background: rgba(255,77,77,0.0);
+      box-shadow: 0 0 0 0 rgba(255,77,77,0.0);
+    }
+    .pulse.active{
+      background: rgba(255,77,77,0.9);
+      animation: pulse 0.9s ease-in-out infinite;
+    }
+    @keyframes pulse{
+      0% { box-shadow: 0 0 0 0 rgba(255,77,77,0.25); }
+      70% { box-shadow: 0 0 0 16px rgba(255,77,77,0.0); }
+      100% { box-shadow: 0 0 0 0 rgba(255,77,77,0.0); }
     }
   </style>
 </head>
@@ -402,20 +426,27 @@
     </aside>
 
     <main class="main">
-
+      <video id="pip-video" class="pip"
+               src="/assets/Movie_004.mp4"
+               controls autoplay muted loop playsinline preload="auto">
+            </video>
       <div class="topbar">
         <div class="left">
           <h1>Панель управления</h1>
-          <p class="hint">Клик по фонарю — создать задачу. Дроны назначаются и летают автоматически.</p>
+          <p class="hint">Клик по фонарю — создать задачу. (Анимация — отдельное окно)</p>
         </div>
         <div class="statusline">
-          <span class="pill"><span class="dot info"></span><span id="ws-state">WS: connecting</span></span>
-          <span class="pill"><span class="dot good"></span><span id="drones-pill">Дронов: 7</span></span>
+          <span class="pill"><span class="dot info" id="ws-dot"></span><span id="ws-state">WS: connecting</span></span>
           <span class="pill"><span class="dot warn"></span><span id="lamps-pill">Ламп в окне: 0</span></span>
+
+          <!-- КНОПКА АНИМАЦИИ -->
+          <button class="btn secondary" id="open-animation-btn">
+            <i class="fa-solid fa-film"></i> Показать анимацию
+
+          </button>
         </div>
       </div>
 
-      <!-- MAP PAGE -->
       <section class="page-section" id="page-map" style="display:block;">
         <div class="grid">
 
@@ -423,7 +454,7 @@
             <div class="card-header">
               <div class="h">
                 <h2><i class="fa-solid fa-lightbulb"></i> Карта освещения</h2>
-                <p>Лампы подгружаются по видимой области (bbox) и кластеризуются</p>
+                <p>Лампы подгружаются по bbox и кластеризуются</p>
               </div>
               <div style="display:flex; gap:10px; flex-wrap:wrap;">
                 <button class="btn secondary" id="refresh-lamps-btn"><i class="fa-solid fa-rotate"></i>Обновить лампы</button>
@@ -440,7 +471,7 @@
             <div class="card-header">
               <div class="h">
                 <h2><i class="fa-solid fa-clipboard-list"></i> Очередь задач</h2>
-                <p>Drag&drop меняет порядок (только queued)</p>
+                <p>Drag&drop меняет порядок (queued)</p>
               </div>
               <button class="btn" id="create-plan-btn"><i class="fa-solid fa-plus"></i>Добавить задачу</button>
             </div>
@@ -456,7 +487,6 @@
         </div>
       </section>
 
-      <!-- REMOTE PAGE -->
       <section class="page-section" id="page-remote" style="display:none;">
         <div class="card">
           <div class="card-header">
@@ -474,12 +504,43 @@
     </main>
   </div>
 
+  <!-- ===== MODAL ANIMATION ===== -->
+  <div id="anim-modal" class="modal" style="display:none;">
+    <div class="modal-backdrop"></div>
+
+    <div class="modal-card">
+      <div class="modal-header">
+        <div>
+          <div class="modal-title">Анимация миссии</div>
+          <div class="modal-sub">Хаб → Лампа → Хаб</div>
+        </div>
+        <button class="modal-close" id="close-animation-btn">✕</button>
+      </div>
+
+      <div class="anim-stage" id="anim-stage">
+        <div class="hub">Хаб</div>
+        <div class="lamp">Лампа</div>
+        <div class="path"></div>
+
+        <div class="drone" id="anim-drone">✈</div>
+        <div class="pulse" id="lamp-pulse"></div>
+        <div class="status" id="anim-status">Готов</div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn" id="run-animation-btn"><i class="fa-solid fa-play"></i> Запустить</button>
+        <button class="btn secondary" id="reset-animation-btn"><i class="fa-solid fa-rotate-left"></i> Сброс</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // ===================== WS =====================
     const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
     const socket = new WebSocket(wsUrl);
 
     const wsStateEl = document.getElementById("ws-state");
+    const wsDot = document.getElementById("ws-dot");
     const lampsPillEl = document.getElementById("lamps-pill");
 
     // ===================== Queue UI =====================
@@ -487,33 +548,71 @@
     const queueCountEl = document.getElementById('queue-count');
     const createBtn = document.getElementById('create-plan-btn');
     const refreshQueueBtn = document.getElementById('refresh-queue-btn');
+    const refreshLampsBtn = document.getElementById('refresh-lamps-btn');
     let sortableInstance = null;
 
     // ===================== Map / Lamps =====================
     let ymap = null;
     let clusterer = null;
-    let lampPlacemarks = new Map(); // only visible lamps
+    let lampPlacemarks = new Map();
+    let dronePlacement = new Map();
     let lastVisibleLamps = [];
     let lampsReqTimer = null;
 
     const HUB = { lat: 55.7963, lon: 49.1088 };
+    function updateDronesOnMap(dronesArr) {
+      if (!ymap) return;
 
-    // ===================== Drones & Routes =====================
-    let droneMarks = new Map();  // drone_id -> Placemark
-    let routeLines = new Map();  // drone_id -> Polyline
+      dronesArr.forEach(d => {
+          const newCoords = [d.lat, d.lon];
+
+          if (dronePlacemarks.has(d.id)) {
+              // Если дрон уже есть, перемещаем его
+              const pm = dronePlacemarks.get(d.id);
+
+              // Чтобы дрон не "прыгал", а "летел", используем простую анимацию
+              animatePlacemark(pm, newCoords);
+
+              pm.properties.set('balloonContent', `Дрон: ${d.code}<br>Заряд: ${d.battery_percent}%<br>Статус: ${d.status}`);
+          } else {
+              // Если дрона нет, создаем новую метку
+              const pm = new ymaps.Placemark(newCoords, {
+                  hintContent: `Дрон ${d.code}`,
+                  balloonContent: `Статус: ${d.status}`
+              }, {
+                  // Используем встроенную иконку или свою картинку
+                  preset: 'islands#blueDeliveryIcon',
+                  iconColor: '#00c6ff'
+              });
+
+              ymap.geoObjects.add(pm);
+              dronePlacemarks.set(d.id, pm);
+          }
+      });
+  }
+    function animatePlacemark(pm, targetCoords) {
+      const startCoords = pm.geometry.getCoordinates();
+      const duration = 1000; // 1 секунда на полет
+      const start = performance.now();
+
+      function step(now) {
+          const t = Math.min(1, (now - start) / duration);
+          const currentLat = startCoords[0] + (targetCoords[0] - startCoords[0]) * t;
+          const currentLon = startCoords[1] + (targetCoords[1] - startCoords[1]) * t;
+
+          pm.geometry.setCoordinates([currentLat, currentLon]);
+
+          if (t < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+  }
 
     function statusToColor(status) {
       if (status === "URGENT") return "#ff4d4d";
       if (status === "PLAN") return "#f5c542";
       if (status === "IN_PROGRESS") return "#4da3ff";
       if (status === "FIXED") return "#9e9e9e";
-      return "#35d07f"; // OK
-    }
-
-    function addTaskToQueue({ lamp_id, loc, status="План", type="medium" }) {
-      if (!lamp_id) return;
-      if (socket.readyState !== WebSocket.OPEN) return;
-      socket.send(JSON.stringify({ action: "ADD_TO_PLAN", lamp_id, loc, status, type }));
+      return "#35d07f";
     }
 
     function initSortable() {
@@ -532,8 +631,7 @@
 
     function renderQueue(queue) {
       queueEl.innerHTML = '';
-
-      queue.forEach(item => {
+      (queue || []).forEach(item => {
         const priorityClass =
           item.type === 'high' ? 'priority-high' :
           item.type === 'low'  ? 'priority-low'  :
@@ -567,7 +665,7 @@
         queueEl.appendChild(row);
       });
 
-      queueCountEl.textContent = `${queue.length} ламп`;
+      queueCountEl.textContent = `${(queue || []).length} ламп`;
       initSortable();
     }
 
@@ -581,7 +679,7 @@
       if (!ymap) return;
       if (socket.readyState !== WebSocket.OPEN) return;
 
-      const b = ymap.getBounds(); // [[swLat, swLon],[neLat, neLon]]
+      const b = ymap.getBounds();
       if (!b) return;
 
       const latMin = Math.min(b[0][0], b[1][0]);
@@ -602,7 +700,7 @@
       clusterer.removeAll();
       lampPlacemarks.clear();
 
-      const marks = lampsArr.map(l => {
+      const marks = (lampsArr || []).map(l => {
         const pm = new ymaps.Placemark([l.lat, l.lon], {
           hintContent: `Фонарь ${l.id}`,
           balloonContent: `<b>Фонарь ${l.id}</b><br/>Статус: ${l.status}<br/><small>клик — добавить задачу</small>`
@@ -613,12 +711,13 @@
         });
 
         pm.events.add("click", () => {
-          addTaskToQueue({
+          socket.send(JSON.stringify({
+            action: "ADD_TO_PLAN",
             lamp_id: l.id,
             loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
             status: "План",
             type: "medium"
-          });
+          }));
         });
 
         lampPlacemarks.set(l.id, pm);
@@ -626,58 +725,12 @@
       });
 
       clusterer.add(marks);
-      lampsPillEl.textContent = `Ламп в окне: ${lampsArr.length}`;
+      lampsPillEl.textContent = `Ламп в окне: ${(lampsArr || []).length}`;
     }
 
     function updateLampStatus(lampId, status) {
       const pm = lampPlacemarks.get(lampId);
       if (pm) pm.options.set("iconColor", statusToColor(status));
-    }
-
-    // --------------------- Drones ---------------------
-    function upsertDroneMark(d) {
-      if (!ymap || !window.ymaps) return;
-
-      const hint = `${d.code} • ${d.status} • ${d.battery_percent}%`;
-      const pos = [d.lat, d.lon];
-
-      let pm = droneMarks.get(d.id);
-      if (!pm) {
-        pm = new ymaps.Placemark(pos, { hintContent: hint }, { preset: "islands#blueCircleDotIcon" });
-        ymap.geoObjects.add(pm);
-        droneMarks.set(d.id, pm);
-      } else {
-        pm.geometry.setCoordinates(pos);
-        pm.properties.set("hintContent", hint);
-      }
-    }
-
-    function updateDroneTick(t) {
-      if (!ymap || !window.ymaps) return;
-
-      const hint = `${t.code} • ${t.phase} • ${t.battery_percent}% • ${(t.dist_remaining_m/1000).toFixed(2)}км`;
-      const pos = [t.lat, t.lon];
-
-      let pm = droneMarks.get(t.drone_id);
-      if (!pm) {
-        pm = new ymaps.Placemark(pos, { hintContent: hint }, { preset: "islands#blueCircleDotIcon" });
-        ymap.geoObjects.add(pm);
-        droneMarks.set(t.drone_id, pm);
-      } else {
-        pm.geometry.setCoordinates(pos);
-        pm.properties.set("hintContent", hint);
-      }
-    }
-
-    function setRoute(droneId, polyline) {
-      if (!ymap || !window.ymaps) return;
-
-      const old = routeLines.get(droneId);
-      if (old) ymap.geoObjects.remove(old);
-
-      const line = new ymaps.Polyline(polyline, {}, { strokeWidth: 3, strokeColor: "#00c6ff" });
-      ymap.geoObjects.add(line);
-      routeLines.set(droneId, line);
     }
 
     // --------------------- Map init ---------------------
@@ -694,24 +747,20 @@
           controls: ["zoomControl", "geolocationControl"]
         });
 
-        // Hub marker
         ymap.geoObjects.add(new ymaps.Placemark([HUB.lat, HUB.lon], {
           balloonContent: "<b>Хаб</b>"
         }, {
           preset: "islands#violetDotIcon"
         }));
 
-        // Clusterer for lamps
         clusterer = new ymaps.Clusterer({
           preset: "islands#invertedBlueClusterIcons",
           groupByCoordinates: false
         });
         ymap.geoObjects.add(clusterer);
 
-        // bbox loading
         ymap.events.add("boundschange", requestLampsInViewDebounced);
 
-        // first load
         requestLampsInView();
         setTimeout(() => ymap.container.fitToViewport(), 50);
       });
@@ -741,80 +790,125 @@
     });
 
     // --------------------- Buttons ---------------------
-    document.getElementById("refresh-lamps-btn").onclick = requestLampsInView;
+    refreshLampsBtn.onclick = requestLampsInView;
     refreshQueueBtn.onclick = () => socket.send(JSON.stringify({ action: "GET_QUEUE" }));
 
-    // кнопка добавления — берёт реальную лампу из видимой области
     createBtn.onclick = function () {
       if (!lastVisibleLamps.length) {
         alert("Нет ламп в видимой области. Приблизь/сдвинь карту.");
         return;
       }
       const l = lastVisibleLamps[Math.floor(Math.random() * lastVisibleLamps.length)];
-      addTaskToQueue({
+      socket.send(JSON.stringify({
+        action: "ADD_TO_PLAN",
         lamp_id: l.id,
         loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
         status: "План",
         type: "medium"
-      });
+      }));
     };
 
     // --------------------- WS events ---------------------
     socket.onopen = () => {
       wsStateEl.textContent = "WS: online";
-      wsStateEl.parentElement.querySelector(".dot").classList.remove("bad");
-      wsStateEl.parentElement.querySelector(".dot").classList.add("good");
-      if (ymap) requestLampsInView();
+      wsDot.classList.remove("bad", "info");
+      wsDot.classList.add("good");
+
       socket.send(JSON.stringify({ action: "GET_QUEUE" }));
+      if (ymap) requestLampsInView();
     };
 
     socket.onclose = () => {
       wsStateEl.textContent = "WS: offline";
-      wsStateEl.parentElement.querySelector(".dot").classList.remove("good");
-      wsStateEl.parentElement.querySelector(".dot").classList.add("bad");
+      wsDot.classList.remove("good", "info");
+      wsDot.classList.add("bad");
     };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
 
-      if (data.type === "QUEUE_UPDATE") {
-        renderQueue(data.queue || []);
-      }
-
-      if (data.type === "LAMPS_UPDATE") {
-        lastVisibleLamps = data.lamps || [];
-        renderLamps(lastVisibleLamps);
-      }
-
-      if (data.type === "LAMP_STATUS") {
-        updateLampStatus(data.lamp_id, data.status);
-      }
-
-      if (data.type === "DRONES_STATE") {
-        (data.drones || []).forEach(upsertDroneMark);
-      }
-
-      if (data.type === "DRONE_TICK") {
-        updateDroneTick(data);
-      }
-
-      if (data.type === "ROUTE_UPDATE") {
-        setRoute(data.drone_id, data.polyline);
-      }
-
-      if (data.type === "ERROR" && data.code === "LAMP_NOT_FOUND") {
-        alert(`Лампа ${data.lamp_id} не найдена в базе. Сдвинь/приблизь карту и попробуй снова.`);
-      }
+      if (data.type === "QUEUE_UPDATE") renderQueue(data.queue || []);
+      if (data.type === "LAMPS_UPDATE") { lastVisibleLamps = data.lamps || []; renderLamps(lastVisibleLamps); }
+      if (data.type === "LAMP_STATUS") updateLampStatus(data.lamp_id, data.status);
 
       if (data.type === "PAGE_DATA") {
         document.getElementById('dynamic-content').innerHTML = data.html || "";
         showPage('page-remote');
       }
     };
+    socket.onmessage = (event) => {
+    const data = JSON.parse(event.data);
 
+    if (data.type === "QUEUE_UPDATE") renderQueue(data.queue || []);
+    if (data.type === "LAMPS_UPDATE") { lastVisibleLamps = data.lamps || []; renderLamps(lastVisibleLamps); }
+    if (data.type === "LAMP_STATUS") updateLampStatus(data.lamp_id, data.status);
+
+    // ДОБАВЬТЕ ЭТУ СТРОЧКУ:
+    if (data.type === "DRONES_STATE") updateDronesOnMap(data.drones || []);
+
+    if (data.type === "PAGE_DATA") {
+        document.getElementById('dynamic-content').innerHTML = data.html || "";
+        showPage('page-remote');
+    }
+};
     // --------------------- Start ---------------------
     initYandexMap();
     initSortable();
+
+    // ===================== Animation modal =====================
+    const modal = document.getElementById('anim-modal');
+    const openBtn = document.getElementById('open-animation-btn');
+    const closeBtn = document.getElementById('close-animation-btn');
+    const runBtn = document.getElementById('run-animation-btn');
+    const resetBtn = document.getElementById('reset-animation-btn');
+
+    const droneEl = document.getElementById('anim-drone');
+    const statusEl = document.getElementById('anim-status');
+    const pulseEl = document.getElementById('lamp-pulse');
+    const stageEl = document.getElementById('anim-stage');
+
+    function openModal(){ modal.style.display = 'block'; }
+    function closeModal(){ modal.style.display = 'none'; }
+
+    function resetAnim(){
+      pulseEl.classList.remove('active');
+      statusEl.textContent = 'Готов';
+      droneEl.style.transition = 'none';
+      droneEl.style.left = '120px';
+      void droneEl.offsetWidth;
+      droneEl.style.transition = 'left 4.5s linear';
+    }
+
+    async function runAnim(){
+      resetAnim();
+      statusEl.textContent = 'Лечу к лампе…';
+
+      const stageRect = stageEl.getBoundingClientRect();
+      const targetX = stageRect.width - 120;
+
+      droneEl.style.left = `${targetX}px`;
+      await new Promise(r => setTimeout(r, 4600));
+
+      statusEl.textContent = 'Замена лампы…';
+      pulseEl.classList.add('active');
+      await new Promise(r => setTimeout(r, 1600));
+
+      pulseEl.classList.remove('active');
+      statusEl.textContent = 'Возвращаюсь в хаб…';
+
+      droneEl.style.transition = 'left 4.0s linear';
+      droneEl.style.left = '120px';
+      await new Promise(r => setTimeout(r, 4100));
+
+      statusEl.textContent = 'Готово ✅';
+    }
+
+    if (openBtn) openBtn.onclick = openModal;
+    if (closeBtn) closeBtn.onclick = closeModal;
+    modal.querySelector('.modal-backdrop').addEventListener('click', closeModal);
+
+    if (runBtn) runBtn.onclick = runAnim;
+    if (resetBtn) resetBtn.onclick = resetAnim;
   </script>
 </body>
 </html>

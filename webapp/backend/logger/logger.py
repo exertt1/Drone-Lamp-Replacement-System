@@ -2,11 +2,11 @@ import sys
 from loguru import logger
 
 def init_logger():
-    loger = logger.add(
+    log = logger.add(
         sink=sys.stdout,
         level="DEBUG"
     )
-    logger.add(
+    log = logger.add(
         sink=sys.stdout
     )
-    return logger
+    return log
