@@ -6,4 +6,4 @@ venv
 
 Unity
 
-*.log
+.webapp/backend/logger/file.log

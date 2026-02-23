@@ -1,1212 +1,820 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DroneLight-Swap | Управление заменой ламп</title>
-    <!-- Font Awesome для иконок -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Google Fonts для современного шрифта -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0b1120 0%, #19223c 100%);
-            color: #e0e4f0;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-
-        /* Градиентные акценты */
-        .gradient-bg {
-            position: fixed;
-            top: -50%;
-            right: -20%;
-            width: 80%;
-            height: 80%;
-            background: radial-gradient(circle at 70% 30%, rgba(0, 180, 255, 0.15) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        .gradient-bg-2 {
-            position: fixed;
-            bottom: -30%;
-            left: -10%;
-            width: 70%;
-            height: 70%;
-            background: radial-gradient(circle at 30% 70%, rgba(150, 50, 255, 0.1) 0%, transparent 50%);
-            z-index: -1;
-            pointer-events: none;
-        }
-
-        /* Основной контейнер */
-        .container {
-            max-width: 1440px;
-            margin: 0 auto;
-            padding: 24px 32px;
-        }
-
-        /* Шапка */
-        header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .logo-icon {
-            width: 41px;
-            height: 48px;
-            background: linear-gradient(135deg, #00c6ff, #8a2be2);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 10px 20px rgba(0, 198, 255, 0.3);
-        }
-
-        .logo-text h1 {
-            font-weight: 700;
-            font-size: 26px;
-            letter-spacing: -0.5px;
-            background: linear-gradient(135deg, #ffffff, #b0c4ff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .logo-text span {
-            font-size: 14px;
-            font-weight: 400;
-            color: #8892b5;
-            display: block;
-            margin-top: 2px;
-        }
-
-        .header-stats {
-            display: flex;
-            gap: 24px;
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(10px);
-            padding: 12px 24px;
-            border-radius: 40px;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .stat-icon {
-            width: 36px;
-            height: 36px;
-            background: rgba(0, 198, 255, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00c6ff;
-        }
-
-        .stat-info h3 {
-            font-size: 18px;
-            font-weight: 700;
-        }
-
-        .stat-info p {
-            font-size: 12px;
-            color: #8892b5;
-        }
-
-        .online-badge {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0, 255, 0, 0.05);
-            padding: 8px 16px;
-            border-radius: 30px;
-            border: 1px solid rgba(0, 255, 0, 0.2);
-        }
-
-        .online-dot {
-            width: 10px;
-            height: 10px;
-            background: #2ecc71;
-            border-radius: 50%;
-            box-shadow: 0 0 10px #2ecc71;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.5; }
-            100% { opacity: 1; }
-        }
-
-        /* Навигация */
-        nav {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 32px;
-            background: rgba(18, 25, 45, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 8px;
-            border-radius: 50px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            width: fit-content;
-        }
-
-        .nav-item {
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-item i {
-            font-size: 16px;
-        }
-
-        .nav-item.active {
-            background: linear-gradient(135deg, #00c6ff, #8a2be2);
-            color: white;
-            box-shadow: 0 5px 15px rgba(0, 198, 255, 0.4);
-        }
-
-        .nav-item:not(.active):hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        /* Карта и панель управления */
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1.2fr 0.8fr;
-            gap: 24px;
-            margin-bottom: 24px;
-        }
-
-        .map-card {
-            background: rgba(18, 25, 45, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .card-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .card-header h2 {
-            font-size: 18px;
-            font-weight: 600;
-            color: #b0c4ff;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        .card-header .badge {
-            background: rgba(0, 198, 255, 0.15);
-            padding: 6px 12px;
-            border-radius: 30px;
-            font-size: 13px;
-            color: #00c6ff;
-        }
-
-        .map-placeholder {
-            background: #0f1422;
-            border-radius: 24px;
-            height: 300px;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #252f44;
-        }
-        .map-placeholder{
-          background: #0f1422;
-          border-radius: 24px;
-          height: 70vh;      /* <-- вместо 300px */
-          min-height: 520px; /* чтобы на маленьких экранах не сжималась */
-          position: relative;
-          overflow: hidden;
-          border: 1px solid #252f44;
-        }
-
-        #ymap{
-          width: 100%;
-          height: 100%;
-          border-radius: 18px;
-        }
-
-        /* Имитация карты с точками */
-        .map-grid {
-            display: grid;
-            grid-template-columns: repeat(20, 1fr);
-            grid-template-rows: repeat(10, 1fr);
-            height: 100%;
-            width: 100%;
-            position: relative;
-        }
-
-        .map-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin: auto;
-            transition: all 0.2s;
-        }
-
-        .dot-green {
-            background: #2ecc71;
-            box-shadow: 0 0 10px #2ecc71;
-        }
-
-        .dot-yellow {
-            background: #f39c12;
-            box-shadow: 0 0 10px #f39c12;
-        }
-
-        .dot-red {
-            background: #e74c3c;
-            box-shadow: 0 0 10px #e74c3c;
-        }
-
-        .dot-blue {
-            background: #3498db;
-            box-shadow: 0 0 10px #3498db;
-        }
-
-        .map-legend {
-            position: absolute;
-            bottom: 15px;
-            right: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            backdrop-filter: blur(5px);
-            padding: 10px 15px;
-            border-radius: 20px;
-            display: flex;
-            gap: 15px;
-            font-size: 12px;
-            border: 1px solid #2a3450;
-        }
-
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-
-        .legend-color {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-        }
-
-        /* Панель статуса */
-        .status-panel {
-            background: rgba(18, 25, 45, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        .drone-status {
-            background: linear-gradient(135deg, #1b2338, #141b2b);
-            border-radius: 24px;
-            padding: 20px;
-            border-left: 4px solid #00c6ff;
-        }
-
-        .drone-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 15px;
-        }
-
-        .drone-name {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .drone-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(0, 198, 255, 0.1);
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #00c6ff;
-        }
-
-        .drone-battery {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .battery-bar {
-            width: 60px;
-            height: 8px;
-            background: #2a3450;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .battery-fill {
-            height: 100%;
-            width: 85%;
-            background: linear-gradient(90deg, #2ecc71, #f1c40f);
-            border-radius: 4px;
-        }
-
-        .task-progress {
-            margin-top: 10px;
-        }
-
-        .progress-label {
-            display: flex;
-            justify-content: space-between;
-            font-size: 13px;
-            margin-bottom: 5px;
-            color: #8892b5;
-        }
-
-        .progress-bar {
-            height: 8px;
-            background: #2a3450;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-
-        .progress-fill {
-            height: 100%;
-            width: 65%;
-            background: linear-gradient(90deg, #00c6ff, #8a2be2);
-            border-radius: 4px;
-        }
-
-        /* Список ламп на замену */
-        .lamp-list {
-            flex: 1;
-        }
-
-        .lamp-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .lamp-item:last-child {
-            border-bottom: none;
-        }
-
-        .lamp-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .lamp-priority {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-        }
-
-        .priority-high {
-            background: #e74c3c;
-            box-shadow: 0 0 10px #e74c3c;
-        }
-
-        .priority-medium {
-            background: #f39c12;
-        }
-
-        .priority-low {
-            background: #2ecc71;
-        }
-
-        .lamp-details h4 {
-            font-size: 16px;
-            font-weight: 600;
-        }
-
-        .lamp-details p {
-            font-size: 12px;
-            color: #8892b5;
-        }
-
-        .lamp-status {
-            font-size: 13px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            background: rgba(255, 255, 255, 0.05);
-        }
-
-        .status-bad {
-            color: #e74c3c;
-            background: rgba(231, 76, 60, 0.1);
-        }
-
-        .btn {
-            background: linear-gradient(135deg, #00c6ff, #8a2be2);
-            border: none;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 30px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(0, 198, 255, 0.3);
-        }
-
-        .btn-outline {
-            background: transparent;
-            border: 1px solid #3a4565;
-        }
-
-        .btn-outline:hover {
-            background: rgba(255, 255, 255, 0.05);
-            transform: none;
-            box-shadow: none;
-        }
-
-        /* Нижняя секция с 3D моделью */
-        .model-section {
-            background: rgba(18, 25, 45, 0.6);
-            backdrop-filter: blur(10px);
-            border-radius: 32px;
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            margin-top: 24px;
-        }
-
-        .model-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-
-        .model-viewer {
-            background: #0f1422;
-            border-radius: 24px;
-            height: 280px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
-            border: 1px solid #252f44;
-        }
-
-        /* Визуализация лампы (имитация 3D) */
-        .lamp-visualization {
-            display: flex;
-            gap: 40px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .lamp-base {
-            width: 120px;
-            height: 60px;
-            background: linear-gradient(135deg, #4a5a7a, #2a3450);
-            border-radius: 60px 60px 20px 20px;
-            position: relative;
-            box-shadow: 0 20px 30px rgba(0,0,0,0.5);
-        }
-
-        .lamp-base:after {
-            content: '';
-            position: absolute;
-            top: -30px;
-            left: 40px;
-            width: 40px;
-            height: 40px;
-            background: linear-gradient(135deg, #ffd700, #f39c12);
-            border-radius: 50%;
-            box-shadow: 0 0 40px #ffd700;
-            animation: glow 2s infinite alternate;
-        }
-
-        @keyframes glow {
-            from { box-shadow: 0 0 20px #ffd700; }
-            to { box-shadow: 0 0 50px #f39c12; }
-        }
-
-        .drone-arm {
-            width: 80px;
-            height: 20px;
-            background: linear-gradient(90deg, #8892b5, #4a5a7a);
-            border-radius: 20px;
-            position: relative;
-        }
-
-        .drone-arm:before, .drone-arm:after {
-            content: '';
-            position: absolute;
-            width: 30px;
-            height: 30px;
-            background: #2a3450;
-            border-radius: 50%;
-            top: -5px;
-        }
-
-        .drone-arm:before { left: -15px; }
-        .drone-arm:after { right: -15px; }
-
-        .temp-indicator {
-            position: absolute;
-            top: 20px;
-            right: 30px;
-            background: rgba(0,0,0,0.6);
-            padding: 8px 16px;
-            border-radius: 30px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border-left: 3px solid #e74c3c;
-        }
-        .lamp-right{
-          display:flex;
-          align-items:center;
-          gap:10px;
-        }
-
-        .lamp-del{
-          border: 1px solid rgba(255,255,255,0.12);
-          background: rgba(255,255,255,0.06);
-          color: #fff;
-          border-radius: 10px;
-          padding: 6px 10px;
-          cursor: pointer;
-        }
-
-        .lamp-del:hover{
-          background: rgba(255, 80, 80, 0.18);
-          border-color: rgba(255, 80, 80, 0.35);
-        }
-
-        /* Адаптивность */
-        @media (max-width: 1100px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-        }
-    </style>
-    <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
-    <script src="https://api-maps.yandex.ru/2.1/?apikey=__YANDEX_KEY__&lang=ru_RU"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Drone Lamp Replacement System</title>
+
+  <!-- Yandex Maps (ключ подставляется сервером: __YANDEX_KEY__) -->
+  <script src="https://api-maps.yandex.ru/2.1/?apikey=__YANDEX_KEY__&lang=ru_RU"></script>
+
+  <!-- SortableJS -->
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.2/Sortable.min.js"></script>
+
+  <!-- (опционально) иконки -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
+  <style>
+    :root{
+      --bg: #0b1020;
+      --panel: rgba(255,255,255,0.04);
+      --panel2: rgba(255,255,255,0.06);
+      --stroke: rgba(255,255,255,0.10);
+      --text: #e6f1ff;
+      --muted: #8892b5;
+      --accent: #00c6ff;
+      --good: #35d07f;
+      --warn: #f5c542;
+      --bad: #ff4d4d;
+      --info: #4da3ff;
+      --radius: 20px;
+    }
+
+    *{ box-sizing:border-box; }
+    body{
+      margin:0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: radial-gradient(1200px 700px at 20% 10%, rgba(0,198,255,0.12), transparent 60%),
+                  radial-gradient(900px 600px at 90% 30%, rgba(53,208,127,0.10), transparent 55%),
+                  var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .app{
+      display:flex;
+      min-height:100vh;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      width: 270px;
+      padding: 18px;
+      border-right: 1px solid rgba(255,255,255,0.08);
+      background: rgba(0,0,0,0.15);
+      backdrop-filter: blur(10px);
+    }
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      margin-bottom: 16px;
+    }
+    .brand i{ color: var(--accent); }
+    .brand .title{
+      font-weight:700;
+      letter-spacing:0.4px;
+      line-height:1.1;
+    }
+    .brand .sub{
+      font-size:12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .nav{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      margin-top: 14px;
+    }
+    .nav-item{
+      user-select:none;
+      cursor:pointer;
+      padding: 12px 12px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      color: var(--text);
+      display:flex;
+      align-items:center;
+      gap:10px;
+      transition: 150ms ease;
+    }
+    .nav-item i{ color: rgba(255,255,255,0.7); }
+    .nav-item:hover{
+      border-color: rgba(0,198,255,0.35);
+      background: rgba(0,198,255,0.06);
+    }
+    .nav-item.active{
+      border-color: rgba(0,198,255,0.55);
+      box-shadow: 0 0 0 1px rgba(0,198,255,0.2) inset;
+      background: rgba(0,198,255,0.10);
+    }
+
+    /* Main */
+    .main{
+      flex:1;
+      display:flex;
+      flex-direction:column;
+      padding: 18px;
+      gap: 14px;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(10px);
+    }
+    .topbar .left{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .topbar h1{
+      margin:0;
+      font-size: 18px;
+      letter-spacing: 0.2px;
+    }
+    .topbar .hint{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .statusline{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+      align-items:center;
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .pill{
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .dot{
+      width:8px;height:8px;border-radius:50%;
+      background: var(--muted);
+      display:inline-block;
+    }
+    .dot.good{ background: var(--good); }
+    .dot.warn{ background: var(--warn); }
+    .dot.bad{ background: var(--bad); }
+    .dot.info{ background: var(--info); }
+
+    /* Layout grid */
+    .grid{
+      display:grid;
+      grid-template-columns: 1.55fr 0.95fr;
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .card{
+      border-radius: var(--radius);
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+    }
+
+    .card-header{
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+    }
+    .card-header .h{
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .card-header h2{
+      margin:0;
+      font-size: 14px;
+      letter-spacing:0.3px;
+    }
+    .card-header p{
+      margin:0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .btn{
+      cursor:pointer;
+      border-radius: 14px;
+      padding: 10px 12px;
+      border: 1px solid rgba(0,198,255,0.30);
+      background: rgba(0,198,255,0.10);
+      color: var(--text);
+      font-weight: 600;
+      transition: 150ms ease;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .btn:hover{
+      background: rgba(0,198,255,0.16);
+      border-color: rgba(0,198,255,0.45);
+    }
+    .btn.secondary{
+      border-color: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.05);
+    }
+    .btn.secondary:hover{
+      background: rgba(255,255,255,0.08);
+    }
+
+    /* Map */
+    .map-wrap{
+      padding: 14px;
+    }
+    .map-placeholder{
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.18);
+      overflow: hidden;
+      height: 70vh;
+      min-height: 520px;
+    }
+    #ymap{
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Queue */
+    .queue-wrap{
+      padding: 14px;
+      display:flex;
+      flex-direction:column;
+      gap: 12px;
+    }
+    .queue-meta{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+    .queue-count{
+      font-size: 12px;
+      color: var(--muted);
+    }
+    #lamp-queue{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      min-height: 120px;
+    }
+
+    .lamp-item{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.04);
+      padding: 12px 12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      cursor: grab;
+    }
+    .lamp-info{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width: 0;
+    }
+    .lamp-details{
+      min-width:0;
+    }
+    .lamp-details h4{
+      margin:0;
+      font-size: 13px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .lamp-details p{
+      margin:3px 0 0 0;
+      font-size: 12px;
+      color: var(--muted);
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 240px;
+    }
+
+    .lamp-priority{
+      width: 10px; height: 10px;
+      border-radius: 999px;
+      display:inline-block;
+      box-shadow: 0 0 0 3px rgba(255,255,255,0.02);
+    }
+    .priority-high{ background: var(--bad); }
+    .priority-medium{ background: var(--warn); }
+    .priority-low{ background: var(--good); }
+
+    .lamp-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .lamp-status{
+      font-size: 12px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.04);
+      color: var(--muted);
+      white-space:nowrap;
+    }
+    .lamp-status.status-bad{
+      border-color: rgba(255,77,77,0.35);
+      background: rgba(255,77,77,0.12);
+      color: #ffd1d1;
+    }
+
+    .lamp-del{
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 6px 10px;
+      cursor:pointer;
+    }
+    .lamp-del:hover{
+      background: rgba(255, 80, 80, 0.18);
+      border-color: rgba(255, 80, 80, 0.35);
+    }
+
+    .sortable-ghost{
+      opacity: 0.45;
+    }
+
+    /* Pages */
+    .page-section{ display:none; }
+    #page-map{ display:block; } /* default */
+
+    /* Responsive */
+    @media (max-width: 1100px){
+      .grid{ grid-template-columns: 1fr; }
+      .sidebar{ width: 240px; }
+      .lamp-details p{ max-width: 420px; }
+    }
+    @media (max-width: 760px){
+      .app{ flex-direction:column; }
+      .sidebar{ width: 100%; border-right:none; border-bottom:1px solid rgba(255,255,255,0.08); }
+      .main{ padding: 12px; }
+      .map-placeholder{ height: 60vh; min-height: 420px; }
+    }
+  </style>
 </head>
+
 <body>
-    <div class="gradient-bg"></div>
-    <div class="gradient-bg-2"></div>
+  <div class="app">
 
-    <div class="container">
-        <!-- Шапка -->
-        <header>
-            <div class="logo-area">
-                <div class="logo-icon">
-                    <i class="fas fa-robot"></i>
-                </div>
-                <div class="logo-text">
-                    <h1>DroneLight-Swap</h1>
-                    <span>Автоматизированная замена уличных ламп</span>
-                </div>
+    <aside class="sidebar">
+      <div class="brand">
+        <i class="fa-solid fa-drone"></i>
+        <div>
+          <div class="title">Drone Lamp System</div>
+          <div class="sub">Kazan • WebSocket • Postgres</div>
+        </div>
+      </div>
+
+      <div class="nav">
+        <div class="nav-item active"><i class="fa-solid fa-map"></i>Карта ламп</div>
+        <div class="nav-item"><i class="fa-solid fa-helicopter"></i>Управление дронами</div>
+        <div class="nav-item"><i class="fa-solid fa-list-check"></i>Планы замены</div>
+        <div class="nav-item"><i class="fa-solid fa-chart-line"></i>Аналитика</div>
+        <div class="nav-item"><i class="fa-solid fa-gear"></i>Настройки</div>
+      </div>
+    </aside>
+
+    <main class="main">
+
+      <div class="topbar">
+        <div class="left">
+          <h1>Панель управления</h1>
+          <p class="hint">Клик по фонарю — создать задачу. Дроны назначаются и летают автоматически.</p>
+        </div>
+        <div class="statusline">
+          <span class="pill"><span class="dot info"></span><span id="ws-state">WS: connecting</span></span>
+          <span class="pill"><span class="dot good"></span><span id="drones-pill">Дронов: 7</span></span>
+          <span class="pill"><span class="dot warn"></span><span id="lamps-pill">Ламп в окне: 0</span></span>
+        </div>
+      </div>
+
+      <!-- MAP PAGE -->
+      <section class="page-section" id="page-map" style="display:block;">
+        <div class="grid">
+
+          <div class="card">
+            <div class="card-header">
+              <div class="h">
+                <h2><i class="fa-solid fa-lightbulb"></i> Карта освещения</h2>
+                <p>Лампы подгружаются по видимой области (bbox) и кластеризуются</p>
+              </div>
+              <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn secondary" id="refresh-lamps-btn"><i class="fa-solid fa-rotate"></i>Обновить лампы</button>
+              </div>
             </div>
-
-            <div class="header-stats">
-                <div class="stat-item">
-                    <div class="stat-icon">
-                        <i class="fas fa-lightbulb"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>1,284</h3>
-                        <p>Всего ламп</p>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">
-                        <i class="fas fa-exclamation-triangle"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>23</h3>
-                        <p>Требуют замены</p>
-                    </div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-icon">
-                        <i class="fas fa-drone"></i>
-                    </div>
-                    <div class="stat-info">
-                        <h3>4/6</h3>
-                        <p>Дронов активно</p>
-                    </div>
-                </div>
+            <div class="map-wrap">
+              <div class="map-placeholder">
+                <div id="ymap"></div>
+              </div>
             </div>
+          </div>
 
-            <div class="online-badge">
-                <span class="online-dot"></span>
-                <span>Система онлайн · v2.4.0</span>
+          <div class="card">
+            <div class="card-header">
+              <div class="h">
+                <h2><i class="fa-solid fa-clipboard-list"></i> Очередь задач</h2>
+                <p>Drag&drop меняет порядок (только queued)</p>
+              </div>
+              <button class="btn" id="create-plan-btn"><i class="fa-solid fa-plus"></i>Добавить задачу</button>
             </div>
-        </header>
-
-        <!-- Навигация -->
-        <nav id="main-nav">
-        <div class="nav-item active" data-page="map">
-            <i class="fas fa-map-marked-alt"></i> Карта ламп
-        </div>
-        <div class="nav-item" data-page="remote">
-            <i class="fas fa-drone"></i> Управление дронами
-        </div>
-        <div class="nav-item" data-page="remote">
-            <i class="fas fa-clipboard-list"></i> Планы замены
-        </div>
-        <div class="nav-item" data-page="remote">
-            <i class="fas fa-chart-line"></i> Аналитика
-        </div>
-        <div class="nav-item" data-page="remote">
-            <i class="fas fa-cog"></i> Настройки
-        </div>
-        </nav>
-
-    <div id="page-map" class="page-section">
-        <div class="dashboard-grid">
-            <div class="map-card">
-                <div class="card-header"><h2>Карта освещения</h2></div>
-                <div class="map-placeholder">
-                    <div id="ymap" style="width:100%;height:100%;border-radius:18px;"></div>
-                </div>
+            <div class="queue-wrap">
+              <div class="queue-meta">
+                <div class="queue-count" id="queue-count">0 ламп</div>
+                <button class="btn secondary" id="refresh-queue-btn"><i class="fa-solid fa-rotate"></i>Обновить</button>
+              </div>
+              <div id="lamp-queue"></div>
             </div>
+          </div>
 
-            <div class="status-panel">
-                <div class="drone-status">
-                    <h4>Дрон #Alpha-7</h4>
-                    <span style="font-size: 12px; color: #00c6ff;">Выполняет замену</span>
-                    <div class="drone-battery" style="margin-right: 20px;">
-                            <i class="fas fa-battery-three-quarters" style="color: #2ecc71;"></i>
-                            <span>85%</span>
-                    </div>
-                    <div class="progress-bar"><div class="progress-fill"></div></div>
-                </div>
-
-                <div class="queue-area">
-                    <div class="card-header">
-                        <h2>Очередь на замену</h2>
-                        <div class="badge" id="queue-count">4 лампы</div>
-                    </div>
-                    <div id="lamp-queue" class="lamp-list">
-                        <div class="lamp-item" data-id="L-0872">
-                            <div class="lamp-info">
-                                <span class="lamp-priority priority-high"></span>
-                                <div class="lamp-details"><h4>Лампа #L-0872</h4><p>пр. Мира, 24</p></div>
-                            </div>
-                            <div class="lamp-status status-bad">Срочно</div>
-                        </div>
-                        <div class="lamp-item" data-id="L-2317">
-                            <div class="lamp-info">
-                                <span class="lamp-priority priority-medium"></span>
-                                <div class="lamp-details"><h4>Лампа #L-2317</h4><p>ул. Ленина, 5</p></div>
-                            </div>
-                            <div class="lamp-status">План</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-outline" id="create-plan-btn" style="width: 100%; margin-top: 15px;">
-                        <i class="fas fa-plus-circle"></i> Создать план замены
-                    </button>
-                </div>
-            </div>
         </div>
-<!--        <div class="model-section">...</div>-->
-    </div>
+      </section>
 
-    <div id="page-remote" class="page-section" style="display: none;">
-        <div style="background: rgba(18, 25, 45, 0.6); border-radius: 32px; padding: 40px; border: 1px solid #252f44; min-height: 500px;">
+      <!-- REMOTE PAGE -->
+      <section class="page-section" id="page-remote" style="display:none;">
+        <div class="card">
+          <div class="card-header">
+            <div class="h">
+              <h2><i class="fa-solid fa-window-maximize"></i> Раздел</h2>
+              <p>Контент приходит с сервера</p>
+            </div>
+          </div>
+          <div style="padding:14px;">
             <div id="dynamic-content"></div>
+          </div>
         </div>
-    </div>
+      </section>
 
-        <!-- Основная панель -->
-<!--        <div class="dashboard-grid">-->
-<!--            &lt;!&ndash; Карта &ndash;&gt;-->
-<!--            <div class="map-card">-->
-<!--                <div class="card-header">-->
-<!--                    <h2><i class="fas fa-map-pin" style="margin-right: 8px;"></i> Интерактивная карта освещения</h2>-->
-<!--                    <div class="badge">Обновлено 2 мин назад</div>-->
-<!--                </div>-->
-<!--                <div class="map-placeholder">-->
-<!--                    <div class="map-grid" id="mapGrid">-->
-<!--                        &lt;!&ndash; Точки будут сгенерированы JS &ndash;&gt;-->
-<!--                    </div>-->
-<!--                    <div class="map-legend">-->
-<!--                        <div class="legend-item"><span class="legend-color" style="background: #2ecc71;"></span> Работает</div>-->
-<!--                        <div class="legend-item"><span class="legend-color" style="background: #f39c12;"></span> Плановая замена</div>-->
-<!--                        <div class="legend-item"><span class="legend-color" style="background: #e74c3c;"></span> Аварийная</div>-->
-<!--                        <div class="legend-item"><span class="legend-color" style="background: #3498db;"></span> Дрон на задании</div>-->
-<!--                    </div>-->
-<!--                </div>-->
-<!--            </div>-->
+    </main>
+  </div>
 
-            <!-- Статус дронов и ближайшие задачи -->
-<!--            <div class="status-panel">-->
-<!--                <div class="drone-status">-->
-<!--                    <div class="drone-row">-->
-<!--                        <div class="drone-name">-->
-<!--                            <div class="drone-icon"><i class="fas fa-drone"></i></div>-->
-<!--                            <div>-->
-<!--                                <h4>Дрон #Alpha-7</h4>-->
-<!--                                <span style="font-size: 12px; color: #00c6ff;">Выполняет замену</span>-->
-<!--                            </div>-->
-<!--                        </div>-->
-<!--                        <div class="drone-battery">-->
-<!--                            <i class="fas fa-battery-three-quarters" style="color: #2ecc71;"></i>-->
-<!--                            <span>85%</span>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <div class="task-progress">-->
-<!--                        <div class="progress-label">-->
-<!--                            <span>Прогресс задачи</span>-->
-<!--                            <span>65%</span>-->
-<!--                        </div>-->
-<!--                        <div class="progress-bar">-->
-<!--                            <div class="progress-fill" style="width: 65%;"></div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <div style="display: flex; gap: 10px; margin-top: 15px;">-->
-<!--                        <div style="font-size: 12px; color: #8892b5;"><i class="far fa-clock"></i> Завершение: 12 мин</div>-->
-<!--                        <div style="font-size: 12px; color: #8892b5;"><i class="fas fa-map-marker-alt"></i> Лампа #L-1423</div>-->
-<!--                    </div>-->
-<!--                </div>-->
+  <script>
+    // ===================== WS =====================
+    const wsUrl = (location.protocol === "https:" ? "wss://" : "ws://") + location.host + "/ws";
+    const socket = new WebSocket(wsUrl);
 
-<!--                <div>-->
-<!--                    <div class="card-header" style="margin-bottom: 10px;">-->
-<!--                        <h2>Очередь на замену</h2>-->
-<!--                        <div class="badge">8 ламп</div>-->
-<!--                    </div>-->
-<!--                    <div class="lamp-list">-->
-<!--                        <div class="lamp-item">-->
-<!--                            <div class="lamp-info">-->
-<!--                                <span class="lamp-priority priority-high"></span>-->
-<!--                                <div class="lamp-details">-->
-<!--                                    <h4>Лампа #L-0872</h4>-->
-<!--                                    <p>пр. Мира, 24 · перегорела</p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="lamp-status status-bad">Срочно</div>-->
-<!--                        </div>-->
-<!--                        <div class="lamp-item">-->
-<!--                            <div class="lamp-info">-->
-<!--                                <span class="lamp-priority priority-medium"></span>-->
-<!--                                <div class="lamp-details">-->
-<!--                                    <h4>Лампа #L-2317</h4>-->
-<!--                                    <p>ул. Ленина, 5 · мигает</p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="lamp-status">План</div>-->
-<!--                        </div>-->
-<!--                        <div class="lamp-item">-->
-<!--                            <div class="lamp-info">-->
-<!--                                <span class="lamp-priority priority-high"></span>-->
-<!--                                <div class="lamp-details">-->
-<!--                                    <h4>Лампа #L-0934</h4>-->
-<!--                                    <p>ул. Гагарина, 12 · не горит</p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="lamp-status status-bad">Срочно</div>-->
-<!--                        </div>-->
-<!--                        <div class="lamp-item">-->
-<!--                            <div class="lamp-info">-->
-<!--                                <span class="lamp-priority priority-low"></span>-->
-<!--                                <div class="lamp-details">-->
-<!--                                    <h4>Лампа #L-3512</h4>-->
-<!--                                    <p>пл. Победы, 1 · профилактика</p>-->
-<!--                                </div>-->
-<!--                            </div>-->
-<!--                            <div class="lamp-status">План</div>-->
-<!--                        </div>-->
-<!--                    </div>-->
-<!--                    <button class="btn btn-outline" style="width: 100%; margin-top: 15px;">-->
-<!--                        <i class="fas fa-plus-circle"></i> Создать план замены-->
-<!--                    </button>-->
-<!--                </div>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--        <div class="container">-->
+    const wsStateEl = document.getElementById("ws-state");
+    const lampsPillEl = document.getElementById("lamps-pill");
 
-<!--    <div id="content-map" class="page-section">-->
-<!--        <div class="dashboard-grid">-->
-<!--            </div>-->
-<!--    </div>-->
+    // ===================== Queue UI =====================
+    const queueEl = document.getElementById('lamp-queue');
+    const queueCountEl = document.getElementById('queue-count');
+    const createBtn = document.getElementById('create-plan-btn');
+    const refreshQueueBtn = document.getElementById('refresh-queue-btn');
+    let sortableInstance = null;
 
-<!--    <div id="content-drones" class="page-section" style="display: none;">-->
-<!--        <div style="background: rgba(18, 25, 45, 0.6); border-radius: 24px; padding: 30px; border: 1px solid #252f44; min-height: 400px;">-->
-<!--            <h2 style="margin-bottom: 20px;"><i class="fas fa-drone"></i> Панель управления флотом</h2>-->
+    // ===================== Map / Lamps =====================
+    let ymap = null;
+    let clusterer = null;
+    let lampPlacemarks = new Map(); // only visible lamps
+    let lastVisibleLamps = [];
+    let lampsReqTimer = null;
 
-<!--            <div id="drone-container" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">-->
-<!--                <p style="color: #8892b5;">Ожидание данных от сервера...</p>-->
-<!--            </div>-->
-<!--        </div>-->
-<!--    </div>-->
+    const HUB = { lat: 55.7963, lon: 49.1088 };
 
-<!--</div>-->
-
-        <!-- 3D Модель светильника -->
-        <div class="model-section">
-            <div class="model-header">
-                <h2><i class="fas fa-cube" style="margin-right: 10px;"></i> 3D визуализация текущего состояния</h2>
-                <div style="display: flex; gap: 12px;">
-                    <div class="badge" style="background: rgba(255,255,255,0.1);">
-                        <i class="fas fa-thermometer-half"></i> Температура: +42°C
-                    </div>
-                    <div class="badge" style="background: rgba(255,255,255,0.1);">
-                        <i class="fas fa-power-off" style="color: #2ecc71;"></i> Лампа: Вкл
-                    </div>
-                    <div class="badge" style="background: rgba(255,255,255,0.1);">
-                        <i class="fas fa-wind"></i> Ветер: 3 м/с
-                    </div>
-                </div>
-            </div>
-            <div class="model-viewer">
-                <div class="lamp-visualization">
-                    <div style="position: relative;">
-                        <div class="lamp-base"></div>
-                        <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #8892b5;">Светильник SmartPole v2</div>
-                    </div>
-                    <div style="display: flex; flex-direction: column; align-items: center;">
-                        <div class="drone-arm"></div>
-                        <div style="margin-top: 20px; text-align: center; font-size: 14px; color: #8892b5;">Захват дрона (магнитный)</div>
-                    </div>
-                </div>
-                
-                <!-- Индикаторы состояния -->
-                <div class="temp-indicator">
-                    <i class="fas fa-temperature-high" style="color: #e74c3c;"></i>
-                    <span>Температура лампы: 42°C</span>
-                </div>
-                
-                <!-- Кнопки управления моделью -->
-                <div style="position: absolute; bottom: 20px; left: 30px; display: flex; gap: 10px;">
-                    <button class="btn" style="padding: 8px 16px; font-size: 13px;"><i class="fas fa-play"></i> Анимация замены</button>
-                    <button class="btn btn-outline" style="padding: 8px 16px; font-size: 13px;"><i class="fas fa-sync-alt"></i> Повернуть</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Нижняя панель с дополнительной информацией -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px; margin-top: 24px;">
-            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
-                <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
-                    <h3 style="font-size: 16px;">Статистика замен</h3>
-                    <span style="color: #00c6ff;">За 7 дней</span>
-                </div>
-                <div style="display: flex; justify-content: space-around;">
-                    <div style="text-align: center;">
-                        <div style="font-size: 28px; font-weight: 700;">42</div>
-                        <div style="font-size: 12px; color: #8892b5;">Выполнено</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 28px; font-weight: 700;">8</div>
-                        <div style="font-size: 12px; color: #8892b5;">В очереди</div>
-                    </div>
-                    <div style="text-align: center;">
-                        <div style="font-size: 28px; font-weight: 700;">3.2</div>
-                        <div style="font-size: 12px; color: #8892b5;">Ср. время (мин)</div>
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
-                <h3 style="font-size: 16px; margin-bottom: 15px;">Активные задания</h3>
-                <div style="display: flex; flex-direction: column; gap: 10px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span><i class="fas fa-circle" style="color: #00c6ff; font-size: 10px;"></i> Дрон #A7 у лампы #L-1423</span>
-                        <span style="color: #8892b5;">65%</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span><i class="fas fa-circle" style="color: #f39c12; font-size: 10px;"></i> Дрон #B3 вылет к #L-0872</span>
-                        <span style="color: #8892b5;">30%</span>
-                    </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span><i class="fas fa-circle" style="color: #2ecc71; font-size: 10px;"></i> Дрон #C1 на базе</span>
-                        <span style="color: #8892b5;">зарядка</span>
-                    </div>
-                </div>
-            </div>
-
-            <div style="background: rgba(18, 25, 45, 0.4); border-radius: 24px; padding: 20px; border: 1px solid #252f44;">
-                <h3 style="font-size: 16px; margin-bottom: 15px;">Погодные условия</h3>
-                <div style="display: flex; gap: 20px; align-items: center;">
-                    <i class="fas fa-cloud-sun" style="font-size: 40px; color: #f39c12;"></i>
-                    <div>
-                        <div style="font-size: 24px; font-weight: 700;">+18°C</div>
-                        <div style="font-size: 12px; color: #8892b5;">Ветер: 3 м/с, влажность: 65%</div>
-                        <div style="font-size: 12px; color: #2ecc71;">✓ Условия пригодны для полетов</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script>
-        // Генерация карты с точками
-     // 0) Один WebSocket на страницу
-      const socket = new WebSocket('ws://localhost:8000/ws');
-
-      const queueEl = document.getElementById('lamp-queue');
-      const queueCountEl = document.getElementById('queue-count');
-      // const mapGrid = document.getElementById('mapGrid');
-
-      let sortableInstance = null;
-      let ymap = null;
-
-// Пример: центр Казани. Потом поставим хаб в точку, которую выберешь.
-    const HUB = { lat: 55.796127, lon: 49.106414 };
-
-    // Пример фонарей (потом заменим на реальные)
-    let lamps = [
-      { id: "L-1001", lat: 55.7972, lon: 49.1056, status: "OK" },
-      { id: "L-1002", lat: 55.7958, lon: 49.1074, status: "PLAN" },
-      { id: "L-1003", lat: 55.7969, lon: 49.1090, status: "URGENT" },
-    ];
+    // ===================== Drones & Routes =====================
+    let droneMarks = new Map();  // drone_id -> Placemark
+    let routeLines = new Map();  // drone_id -> Polyline
 
     function statusToColor(status) {
       if (status === "URGENT") return "#ff4d4d";
       if (status === "PLAN") return "#f5c542";
       if (status === "IN_PROGRESS") return "#4da3ff";
-      return "#35d07f";
+      if (status === "FIXED") return "#9e9e9e";
+      return "#35d07f"; // OK
     }
 
+    function addTaskToQueue({ lamp_id, loc, status="План", type="medium" }) {
+      if (!lamp_id) return;
+      if (socket.readyState !== WebSocket.OPEN) return;
+      socket.send(JSON.stringify({ action: "ADD_TO_PLAN", lamp_id, loc, status, type }));
+    }
+
+    function initSortable() {
+      if (!queueEl) return;
+      if (sortableInstance) sortableInstance.destroy();
+
+      sortableInstance = new Sortable(queueEl, {
+        animation: 150,
+        ghostClass: 'sortable-ghost',
+        onEnd: function () {
+          const order = Array.from(queueEl.children).map(item => item.dataset.id);
+          socket.send(JSON.stringify({ action: "UPDATE_QUEUE_ORDER", new_order: order }));
+        }
+      });
+    }
+
+    function renderQueue(queue) {
+      queueEl.innerHTML = '';
+
+      queue.forEach(item => {
+        const priorityClass =
+          item.type === 'high' ? 'priority-high' :
+          item.type === 'low'  ? 'priority-low'  :
+          'priority-medium';
+
+        const statusClass = item.status === 'Срочно' ? 'status-bad' : '';
+
+        const row = document.createElement('div');
+        row.className = 'lamp-item';
+        row.dataset.id = item.id;
+
+        row.innerHTML = `
+          <div class="lamp-info">
+            <span class="lamp-priority ${priorityClass}"></span>
+            <div class="lamp-details">
+              <h4>Лампа #${item.id}</h4>
+              <p>${item.loc}</p>
+            </div>
+          </div>
+          <div class="lamp-right">
+            <div class="lamp-status ${statusClass}">${item.status}</div>
+            <button class="lamp-del" title="Удалить из очереди">✕</button>
+          </div>
+        `;
+
+        row.querySelector('.lamp-del').onclick = (e) => {
+          e.stopPropagation();
+          socket.send(JSON.stringify({ action: "REMOVE_FROM_PLAN", lamp_id: item.id }));
+        };
+
+        queueEl.appendChild(row);
+      });
+
+      queueCountEl.textContent = `${queue.length} ламп`;
+      initSortable();
+    }
+
+    // --------------------- Lamps bbox loading ---------------------
+    function requestLampsInViewDebounced() {
+      if (lampsReqTimer) clearTimeout(lampsReqTimer);
+      lampsReqTimer = setTimeout(requestLampsInView, 300);
+    }
+
+    function requestLampsInView() {
+      if (!ymap) return;
+      if (socket.readyState !== WebSocket.OPEN) return;
+
+      const b = ymap.getBounds(); // [[swLat, swLon],[neLat, neLon]]
+      if (!b) return;
+
+      const latMin = Math.min(b[0][0], b[1][0]);
+      const latMax = Math.max(b[0][0], b[1][0]);
+      const lonMin = Math.min(b[0][1], b[1][1]);
+      const lonMax = Math.max(b[0][1], b[1][1]);
+
+      socket.send(JSON.stringify({
+        action: "GET_LAMPS",
+        bbox: { lat_min: latMin, lat_max: latMax, lon_min: lonMin, lon_max: lonMax },
+        limit: 1500
+      }));
+    }
+
+    function renderLamps(lampsArr) {
+      if (!clusterer) return;
+
+      clusterer.removeAll();
+      lampPlacemarks.clear();
+
+      const marks = lampsArr.map(l => {
+        const pm = new ymaps.Placemark([l.lat, l.lon], {
+          hintContent: `Фонарь ${l.id}`,
+          balloonContent: `<b>Фонарь ${l.id}</b><br/>Статус: ${l.status}<br/><small>клик — добавить задачу</small>`
+        }, {
+          preset: "islands#circleIcon",
+          iconColor: statusToColor(l.status),
+          openBalloonOnClick: false
+        });
+
+        pm.events.add("click", () => {
+          addTaskToQueue({
+            lamp_id: l.id,
+            loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
+            status: "План",
+            type: "medium"
+          });
+        });
+
+        lampPlacemarks.set(l.id, pm);
+        return pm;
+      });
+
+      clusterer.add(marks);
+      lampsPillEl.textContent = `Ламп в окне: ${lampsArr.length}`;
+    }
+
+    function updateLampStatus(lampId, status) {
+      const pm = lampPlacemarks.get(lampId);
+      if (pm) pm.options.set("iconColor", statusToColor(status));
+    }
+
+    // --------------------- Drones ---------------------
+    function upsertDroneMark(d) {
+      if (!ymap || !window.ymaps) return;
+
+      const hint = `${d.code} • ${d.status} • ${d.battery_percent}%`;
+      const pos = [d.lat, d.lon];
+
+      let pm = droneMarks.get(d.id);
+      if (!pm) {
+        pm = new ymaps.Placemark(pos, { hintContent: hint }, { preset: "islands#blueCircleDotIcon" });
+        ymap.geoObjects.add(pm);
+        droneMarks.set(d.id, pm);
+      } else {
+        pm.geometry.setCoordinates(pos);
+        pm.properties.set("hintContent", hint);
+      }
+    }
+
+    function updateDroneTick(t) {
+      if (!ymap || !window.ymaps) return;
+
+      const hint = `${t.code} • ${t.phase} • ${t.battery_percent}% • ${(t.dist_remaining_m/1000).toFixed(2)}км`;
+      const pos = [t.lat, t.lon];
+
+      let pm = droneMarks.get(t.drone_id);
+      if (!pm) {
+        pm = new ymaps.Placemark(pos, { hintContent: hint }, { preset: "islands#blueCircleDotIcon" });
+        ymap.geoObjects.add(pm);
+        droneMarks.set(t.drone_id, pm);
+      } else {
+        pm.geometry.setCoordinates(pos);
+        pm.properties.set("hintContent", hint);
+      }
+    }
+
+    function setRoute(droneId, polyline) {
+      if (!ymap || !window.ymaps) return;
+
+      const old = routeLines.get(droneId);
+      if (old) ymap.geoObjects.remove(old);
+
+      const line = new ymaps.Polyline(polyline, {}, { strokeWidth: 3, strokeColor: "#00c6ff" });
+      ymap.geoObjects.add(line);
+      routeLines.set(droneId, line);
+    }
+
+    // --------------------- Map init ---------------------
     function initYandexMap() {
       if (!window.ymaps) {
-        console.error("ymaps не загрузился. Проверь ключ/скрипт Яндекса.");
+        console.error("ymaps не загрузился (ключ/скрипт).");
         return;
       }
 
       ymaps.ready(() => {
         ymap = new ymaps.Map("ymap", {
           center: [HUB.lat, HUB.lon],
-          zoom: 15,
+          zoom: 14,
           controls: ["zoomControl", "geolocationControl"]
         });
 
-        // Хаб
-        const hubMark = new ymaps.Placemark([HUB.lat, HUB.lon], {
-          balloonContent: "<b>Хаб дронов</b>"
+        // Hub marker
+        ymap.geoObjects.add(new ymaps.Placemark([HUB.lat, HUB.lon], {
+          balloonContent: "<b>Хаб</b>"
         }, {
           preset: "islands#violetDotIcon"
+        }));
+
+        // Clusterer for lamps
+        clusterer = new ymaps.Clusterer({
+          preset: "islands#invertedBlueClusterIcons",
+          groupByCoordinates: false
         });
-        ymap.geoObjects.add(hubMark);
+        ymap.geoObjects.add(clusterer);
 
-        // Фонари
-        lamps.forEach(l => {
-          const pm = new ymaps.Placemark([l.lat, l.lon], {
-            balloonContent: `<b>Фонарь ${l.id}</b><br/>Статус: ${l.status}`
-          }, {
-            preset: "islands#circleIcon",
-            iconColor: statusToColor(l.status)
-          });
+        // bbox loading
+        ymap.events.add("boundschange", requestLampsInViewDebounced);
 
-          pm.events.add("click", () => {
-            socket.send(JSON.stringify({
-              action: "ADD_TO_PLAN",
-              lamp_id: l.id,
-              loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
-              status: "План",
-              type: "medium"
-            }));
-          });
-
-          ymap.geoObjects.add(pm);
-        });
+        // first load
+        requestLampsInView();
+        setTimeout(() => ymap.container.fitToViewport(), 50);
       });
     }
-      // 1) Карта: рисуем 20x10 точек
-      // function renderMapDots() {
-      //   if (!mapGrid) return;
-      //
-      //   mapGrid.innerHTML = '';
-      //   const total = 200;
-      //
-      //   for (let i = 0; i < total; i++) {
-      //     const dot = document.createElement('div');
-      //     dot.className = 'map-dot';
-      //
-      //     const r = Math.random();
-      //     if (r < 0.70) dot.classList.add('dot-green');
-      //     else if (r < 0.85) dot.classList.add('dot-yellow');
-      //     else if (r < 0.95) dot.classList.add('dot-red');
-      //     else dot.classList.add('dot-blue');
-      //
-      //     mapGrid.appendChild(dot);
-      //   }
-      // }
 
-      // 2) Drag&Drop очереди
-      function initSortable() {
-        if (!queueEl) return;
+    // --------------------- Navigation ---------------------
+    function showPage(id) {
+      document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
+      const el = document.getElementById(id);
+      if (el) el.style.display = 'block';
+    }
 
-        if (sortableInstance) sortableInstance.destroy();
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.onclick = function () {
+        const text = this.innerText.trim();
+        document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+        this.classList.add('active');
 
-        sortableInstance = new Sortable(queueEl, {
-          animation: 150,
-          ghostClass: 'sortable-ghost',
-          onEnd: function () {
-            const order = Array.from(queueEl.children).map(item => item.dataset.id);
-            socket.send(JSON.stringify({ action: "UPDATE_QUEUE_ORDER", new_order: order }));
-          }
-        });
-      }
-
-      // 3) Рендер очереди с сервера
-      function renderQueue(queue) {
-        if (!queueEl) return;
-
-        queueEl.innerHTML = '';
-
-        queue.forEach(item => {
-          const priorityClass =
-            item.type === 'high' ? 'priority-high' :
-            item.type === 'low'  ? 'priority-low'  :
-            'priority-medium';
-
-          const statusClass = item.status === 'Срочно' ? 'status-bad' : '';
-
-          const row = document.createElement('div');
-          row.className = 'lamp-item';
-          row.dataset.id = item.id;
-          row.innerHTML = `
-              <div class="lamp-info">
-                <span class="lamp-priority ${priorityClass}"></span>
-                <div class="lamp-details">
-                  <h4>Лампа #${item.id}</h4>
-                  <p>${item.loc}</p>
-                </div>
-              </div>
-
-              <div class="lamp-right">
-                <div class="lamp-status ${statusClass}">${item.status}</div>
-                <button class="lamp-del" title="Удалить из очереди">✕</button>
-              </div>
-            `;
-        row.querySelector('.lamp-del').onclick = (e) => {
-          e.stopPropagation(); // чтобы не мешало drag
-          socket.send(JSON.stringify({ action: "REMOVE_FROM_PLAN", lamp_id: item.id }));
-        };
-          queueEl.appendChild(row);
-        });
-
-        if (queueCountEl) queueCountEl.textContent = `${queue.length} ламп`;
-
-        initSortable();
-      }
-
-      // 4) Переключение страниц
-      function showPage(id) {
-        document.querySelectorAll('.page-section').forEach(p => p.style.display = 'none');
-        const el = document.getElementById(id);
-        if (el) el.style.display = 'block';
-      }
-
-      // 5) WS входящие
-      socket.onmessage = function (event) {
-        const data = JSON.parse(event.data);
-
-        if (data.type === "QUEUE_UPDATE") {
-          renderQueue(data.queue);
-        }
-
-        if (data.type === "PAGE_DATA") {
-          const dc = document.getElementById('dynamic-content');
-          if (dc) dc.innerHTML = data.html;
-          showPage('page-remote');
+        if (text === "Карта ламп") {
+          showPage('page-map');
+          setTimeout(() => { if (ymap) ymap.container.fitToViewport(); }, 50);
+          requestLampsInViewDebounced();
+        } else {
+          socket.send(JSON.stringify({ page: text }));
         }
       };
+    });
 
-      // 6) Навигация
-      document.querySelectorAll('.nav-item').forEach(item => {
-        item.onclick = function () {
-          const text = this.innerText.trim();
+    // --------------------- Buttons ---------------------
+    document.getElementById("refresh-lamps-btn").onclick = requestLampsInView;
+    refreshQueueBtn.onclick = () => socket.send(JSON.stringify({ action: "GET_QUEUE" }));
 
-          document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-          this.classList.add('active');
-
-          if (text === "Карта ламп") {
-            showPage('page-map');
-            // renderMapDots();              // <-- важно
-            setTimeout(() => { if (ymap) ymap.container.fitToViewport(); }, 50);
-          } else {
-            socket.send(JSON.stringify({ page: text }));
-          }
-        };
+    // кнопка добавления — берёт реальную лампу из видимой области
+    createBtn.onclick = function () {
+      if (!lastVisibleLamps.length) {
+        alert("Нет ламп в видимой области. Приблизь/сдвинь карту.");
+        return;
+      }
+      const l = lastVisibleLamps[Math.floor(Math.random() * lastVisibleLamps.length)];
+      addTaskToQueue({
+        lamp_id: l.id,
+        loc: `Казань (${l.lat.toFixed(5)}, ${l.lon.toFixed(5)})`,
+        status: "План",
+        type: "medium"
       });
+    };
 
-      // 7) Кнопка "Создать план" — только через сервер (не prepend локально!)
-      const createBtn = document.getElementById('create-plan-btn');
-      if (createBtn) {
-        createBtn.onclick = function () {
-          const newId = "L-" + Math.floor(1000 + Math.random() * 9000);
-          socket.send(JSON.stringify({
-            action: "ADD_TO_PLAN",
-            lamp_id: newId,
-            loc: "Новый план",
-            status: "План",
-            type: "medium"
-          }));
-        };
+    // --------------------- WS events ---------------------
+    socket.onopen = () => {
+      wsStateEl.textContent = "WS: online";
+      wsStateEl.parentElement.querySelector(".dot").classList.remove("bad");
+      wsStateEl.parentElement.querySelector(".dot").classList.add("good");
+      if (ymap) requestLampsInView();
+      socket.send(JSON.stringify({ action: "GET_QUEUE" }));
+    };
+
+    socket.onclose = () => {
+      wsStateEl.textContent = "WS: offline";
+      wsStateEl.parentElement.querySelector(".dot").classList.remove("good");
+      wsStateEl.parentElement.querySelector(".dot").classList.add("bad");
+    };
+
+    socket.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      if (data.type === "QUEUE_UPDATE") {
+        renderQueue(data.queue || []);
       }
 
-      // 8) Старт
-        initYandexMap();
-      // renderMapDots();
-      initSortable();
-    </script>
+      if (data.type === "LAMPS_UPDATE") {
+        lastVisibleLamps = data.lamps || [];
+        renderLamps(lastVisibleLamps);
+      }
 
+      if (data.type === "LAMP_STATUS") {
+        updateLampStatus(data.lamp_id, data.status);
+      }
+
+      if (data.type === "DRONES_STATE") {
+        (data.drones || []).forEach(upsertDroneMark);
+      }
+
+      if (data.type === "DRONE_TICK") {
+        updateDroneTick(data);
+      }
+
+      if (data.type === "ROUTE_UPDATE") {
+        setRoute(data.drone_id, data.polyline);
+      }
+
+      if (data.type === "ERROR" && data.code === "LAMP_NOT_FOUND") {
+        alert(`Лампа ${data.lamp_id} не найдена в базе. Сдвинь/приблизь карту и попробуй снова.`);
+      }
+
+      if (data.type === "PAGE_DATA") {
+        document.getElementById('dynamic-content').innerHTML = data.html || "";
+        showPage('page-remote');
+      }
+    };
+
+    // --------------------- Start ---------------------
+    initYandexMap();
+    initSortable();
+  </script>
 </body>
 </html>
